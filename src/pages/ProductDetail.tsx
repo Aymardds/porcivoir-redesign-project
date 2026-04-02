@@ -142,7 +142,7 @@ const ProductDetail = () => {
                 </div>
                 <div className="flex gap-2">
                   <span className="text-muted-foreground">Disponibilité :</span>
-                  <span className="text-green-600 font-medium">En stock</span>
+                  <span className="text-primary font-medium">En stock</span>
                 </div>
               </div>
             </div>
