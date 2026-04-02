@@ -1,14 +1,16 @@
 import { Search, User, Heart, ShoppingCart, Menu } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { useCart } from "@/context/CartContext";
 import logo from "@/assets/logo-porcivoir.png";
 
 const navItems = [
-  { label: "Accueil", href: "#" },
-  { label: "Nos services", href: "#services" },
-  { label: "Boutique", href: "#produits" },
-  { label: "Devenir Partenaire", href: "#partenaire" },
-  { label: "Articles", href: "#articles" },
-  { label: "Contacts", href: "#contact" },
+  { label: "Accueil", href: "/" },
+  { label: "Nos services", href: "/#services" },
+  { label: "Boutique", href: "/#produits" },
+  { label: "Devenir Partenaire", href: "/#partenaire" },
+  { label: "Articles", href: "/#articles" },
+  { label: "Contacts", href: "/#contact" },
 ];
 
 const categories = [
@@ -17,16 +19,16 @@ const categories = [
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { totalItems, setIsOpen } = useCart();
 
   return (
     <header className="sticky top-0 z-50 bg-card shadow-sm">
-      {/* Top nav */}
       <div className="container flex items-center justify-between py-2 text-sm text-muted-foreground">
         <div className="hidden md:flex gap-6">
           {navItems.map((item) => (
-            <a key={item.label} href={item.href} className="hover:text-primary transition-colors font-medium">
+            <Link key={item.label} to={item.href} className="hover:text-primary transition-colors font-medium">
               {item.label}
-            </a>
+            </Link>
           ))}
         </div>
         <div className="flex items-center gap-2 md:hidden">
@@ -41,22 +43,23 @@ const Header = () => {
             <Heart className="w-5 h-5" />
             <span className="absolute -top-1 -right-1 bg-accent text-accent-foreground text-xs w-4 h-4 rounded-full flex items-center justify-center">0</span>
           </button>
-          <button className="hover:text-primary transition-colors relative">
+          <button onClick={() => setIsOpen(true)} className="hover:text-primary transition-colors relative">
             <ShoppingCart className="w-5 h-5" />
-            <span className="absolute -top-1 -right-1 bg-accent text-accent-foreground text-xs w-4 h-4 rounded-full flex items-center justify-center">0</span>
+            <span className="absolute -top-1 -right-1 bg-accent text-accent-foreground text-xs w-4 h-4 rounded-full flex items-center justify-center">
+              {totalItems}
+            </span>
           </button>
         </div>
       </div>
 
-      {/* Category bar */}
       <div className="border-t border-border">
         <div className="container flex items-center gap-8 py-3">
-          <a href="#" className="flex-shrink-0">
+          <Link to="/" className="flex-shrink-0">
             <img src={logo} alt="Porcivoir" className="h-12 w-auto" />
-          </a>
+          </Link>
           <nav className="hidden md:flex items-center gap-6">
             {categories.map((cat) => (
-              <a key={cat} href="#produits" className="text-foreground font-semibold text-sm hover:text-accent transition-colors">
+              <a key={cat} href="/#produits" className="text-foreground font-semibold text-sm hover:text-accent transition-colors">
                 {cat}
               </a>
             ))}
@@ -64,17 +67,16 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Mobile menu */}
       {mobileOpen && (
         <div className="md:hidden border-t border-border bg-card px-4 pb-4">
           {navItems.map((item) => (
-            <a key={item.label} href={item.href} className="block py-2 text-foreground font-medium hover:text-primary">
+            <Link key={item.label} to={item.href} onClick={() => setMobileOpen(false)} className="block py-2 text-foreground font-medium hover:text-primary">
               {item.label}
-            </a>
+            </Link>
           ))}
           <div className="border-t border-border mt-2 pt-2">
             {categories.map((cat) => (
-              <a key={cat} href="#produits" className="block py-1 text-sm text-muted-foreground hover:text-accent">
+              <a key={cat} href="/#produits" className="block py-1 text-sm text-muted-foreground hover:text-accent">
                 {cat}
               </a>
             ))}
