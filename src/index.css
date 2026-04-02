@@ -15,7 +15,7 @@
     --popover: 38 30% 98%;
     --popover-foreground: 150 30% 15%;
 
-    --primary: 150 30% 30%;
+    --primary: 156 100% 31%;
     --primary-foreground: 38 30% 98%;
 
     --secondary: 38 25% 90%;
@@ -24,7 +24,7 @@
     --muted: 38 20% 92%;
     --muted-foreground: 150 10% 45%;
 
-    --accent: 18 78% 53%;
+    --accent: 28 100% 50%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -32,7 +32,7 @@
 
     --border: 38 20% 85%;
     --input: 38 20% 85%;
-    --ring: 150 30% 30%;
+    --ring: 156 100% 31%;
 
     --radius: 0.5rem;
 
@@ -103,5 +103,77 @@
   @keyframes scroll-left {
     0% { transform: translateX(0); }
     100% { transform: translateX(-50%); }
+  }
+
+  /* Hero slider animations */
+  .hero-slide-enter {
+    animation: fadeInSlide 0.7s ease-out forwards;
+  }
+  @keyframes fadeInSlide {
+    from { opacity: 0; transform: scale(1.05); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  /* Countdown pulse */
+  .countdown-pulse {
+    animation: countdownPulse 1s ease-in-out infinite;
+  }
+  @keyframes countdownPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+
+  /* Float animation for decorative elements */
+  .float-animation {
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  /* Category card hover lift */
+  .category-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .category-lift:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+  }
+
+  /* Slide dot active animation */
+  .dot-active {
+    animation: dotExpand 0.3s ease forwards;
+  }
+  @keyframes dotExpand {
+    from { width: 8px; }
+    to { width: 24px; }
+  }
+
+  /* Promo banner shine effect */
+  .promo-shine {
+    position: relative;
+    overflow: hidden;
+  }
+  .promo-shine::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+      to bottom right,
+      rgba(255,255,255,0) 0%,
+      rgba(255,255,255,0) 40%,
+      rgba(255,255,255,0.1) 50%,
+      rgba(255,255,255,0) 60%,
+      rgba(255,255,255,0) 100%
+    );
+    transform: rotate(30deg);
+    transition: transform 0.6s;
+  }
+  .promo-shine:hover::after {
+    transform: rotate(30deg) translate(50%, 50%);
   }
 }

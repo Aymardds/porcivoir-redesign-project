@@ -1,9 +1,17 @@
-import { Minus, Plus, X, ShoppingCart, Trash2 } from "lucide-react";
+import { Minus, Plus, X, ShoppingCart, Trash2, ArrowRight } from "lucide-react";
 import { useCart } from "@/context/CartContext";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+
+import { useNavigate } from "react-router-dom";
 
 const CartDrawer = () => {
+  const navigate = useNavigate();
   const { items, isOpen, setIsOpen, updateQuantity, removeItem, totalPrice, clearCart } = useCart();
+
+  const handleCheckout = () => {
+    setIsOpen(false);
+    navigate("/checkout");
+  };
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -13,6 +21,9 @@ const CartDrawer = () => {
             <ShoppingCart className="w-5 h-5" />
             Mon Panier ({items.length})
           </SheetTitle>
+          <SheetDescription className="sr-only">
+            Gérez les articles de votre panier avant de passer votre commande.
+          </SheetDescription>
         </SheetHeader>
 
         {items.length === 0 ? (
@@ -68,8 +79,12 @@ const CartDrawer = () => {
                 <span>Total</span>
                 <span className="text-accent">{totalPrice.toLocaleString()} CFA</span>
               </div>
-              <button className="w-full bg-primary text-primary-foreground py-3 rounded-md font-semibold hover:bg-primary/90 transition-colors">
-                Commander
+              <button 
+                onClick={handleCheckout}
+                className="w-full bg-primary text-primary-foreground py-3 rounded-md font-semibold hover:bg-primary/90 transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2"
+              >
+                Commander maintenant
+                <ArrowRight className="w-4 h-4" />
               </button>
               <button
                 onClick={clearCart}
