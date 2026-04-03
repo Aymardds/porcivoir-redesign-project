@@ -4,8 +4,10 @@ import { useCart } from "@/context/CartContext";
 import { supabase, supabaseAdmin } from "@/lib/supabase";
 import { toast } from "sonner";
 import { ChevronRight, CreditCard, Truck, ShieldCheck, Loader2 } from "lucide-react";
-import TopBar from "@/components/TopBar";
 import Header from "@/components/Header";
+import { useEmailNotification } from "@/hooks/useEmailNotification";
+import { useAuth } from "@/context/AuthContext";
+import { generateInvoicePdfBase64 } from "@/utils/generateInvoice";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +28,8 @@ const DELIVERY_AREAS = [
 export default function Checkout() {
   const { items, totalPrice, clearCart } = useCart();
   const navigate = useNavigate();
+  const { sendEmail } = useEmailNotification();
+  const { user, profile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
@@ -48,6 +52,19 @@ export default function Checkout() {
     }
     window.scrollTo(0, 0);
   }, [items, navigate]);
+
+  // Pre-fill user data if logged in
+  useEffect(() => {
+    if (user || profile) {
+      setFormData(prev => ({
+        ...prev,
+        firstName: profile?.first_name || prev.firstName,
+        lastName: profile?.last_name || prev.lastName,
+        email: user?.email || prev.email,
+        phone: prev.phone, // Default or fetch if phone exists in profile
+      }));
+    }
+  }, [user, profile]);
 
   // Dynamically injects the CinetPay SDK script if not already loaded
   const loadCinetPaySDK = (): Promise<void> => {
@@ -156,6 +173,7 @@ export default function Checkout() {
       const { data: order, error: orderError } = await supabaseAdmin
         .from("orders")
         .insert({
+          user_id: user?.id || null,
           customer_name: `${formData.firstName} ${formData.lastName}`,
           customer_phone: formData.phone,
           shipping_address: formData.address,
@@ -201,7 +219,27 @@ export default function Checkout() {
         }
       }
 
-      // 4. Clear cart and redirect
+      // 4. Generate Invoice and Send Email
+      if (formData.email) {
+        try {
+          const invoiceBase64 = await generateInvoicePdfBase64(order, orderItems);
+          // Only send the email, wait for it so it goes through smoothly, or don't block
+          // but doing it before clearCart ensures we don't lose context if unmounted.
+          const { error: sendErr } = await sendEmail({
+            order: { ...order, items: orderItems },
+            type: "order_confirmed",
+            client_email: formData.email,
+            invoice_base64: invoiceBase64
+          });
+          if (sendErr) throw new Error(sendErr);
+        } catch (emailErr: any) {
+          console.error("Failed to send email/invoice:", emailErr);
+          toast.error(`La commande est validée, mais l'envoi de l'email a échoué: ${emailErr?.message || emailErr}`);
+          // Let the order succeed even if email fails
+        }
+      }
+
+      // 5. Clear cart and redirect
       clearCart();
       toast.success("Commande transmise avec succès !");
       navigate("/merci", { state: { orderId: order.id, total: finalTotal } });
@@ -219,7 +257,6 @@ export default function Checkout() {
 
   return (
     <div className="min-h-screen flex flex-col bg-secondary/5">
-      <TopBar />
       <Header />
       
       <main className="container flex-1 py-12">
@@ -274,13 +311,14 @@ export default function Checkout() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email (optionnel)</Label>
+                    <Label htmlFor="email">Email</Label>
                     <Input 
                       id="email" 
                       type="email"
+                      required
                       value={formData.email}
                       onChange={e => setFormData({...formData, email: e.target.value})}
-                      placeholder="jean@exemple.com" 
+                      placeholder="client@email.com" 
                     />
                   </div>
                 </div>

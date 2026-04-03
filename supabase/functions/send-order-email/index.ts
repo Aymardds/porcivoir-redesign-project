@@ -114,7 +114,7 @@ serve(async (req) => {
   }
 
   try {
-    const { order, type, client_email } = await req.json();
+    const { order, type, client_email, invoice_base64 } = await req.json();
 
     if (!order || !client_email || !type) {
       return new Response(
@@ -142,18 +142,37 @@ serve(async (req) => {
         );
     }
 
+    const attachments = [];
+    if (invoice_base64) {
+      // Remove data URI prefix if present (e.g. "data:application/pdf;base64,")
+      const base64Content = invoice_base64.includes(",") 
+        ? invoice_base64.split(",")[1] 
+        : invoice_base64;
+        
+      attachments.push({
+        filename: `Facture_PorcIvoire_${order.id.split('-')[0].toUpperCase()}.pdf`,
+        content: base64Content,
+      });
+    }
+
+    const payload: any = {
+      from: `Porc'Ivoire <${FROM_EMAIL}>`,
+      to: [client_email],
+      subject,
+      html,
+    };
+    
+    if (attachments.length > 0) {
+      payload.attachments = attachments;
+    }
+
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${RESEND_API_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        from: `Porc'Ivoire <${FROM_EMAIL}>`,
-        to: [client_email],
-        subject,
-        html,
-      }),
+      body: JSON.stringify(payload),
     });
 
     if (!res.ok) {

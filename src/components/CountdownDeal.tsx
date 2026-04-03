@@ -67,6 +67,7 @@ const CountdownDeal = () => {
         const { data: fallbackProd } = await supabase
           .from('products')
           .select('*')
+          .eq('is_active', true)
           .limit(1)
           .maybeSingle();
         if (fallbackProd) targetProduct = fallbackProd;
@@ -80,10 +81,21 @@ const CountdownDeal = () => {
     }
   };
 
-  useEffect(() => {
-    if (!promo?.valid_until) return;
+  // Fallback promo if none in DB — always show the countdown on the site
+  const defaultPromo = {
+    id: 'default',
+    description: "🥩 Commandes Groupées — Contactez-nous pour vos tarifs spéciaux !",
+    discount_percent: 15,
+    valid_until: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    code: 'GROUPE15',
+  };
 
-    const targetDate = new Date(promo.valid_until).getTime();
+  const displayPromo = promo || defaultPromo;
+
+  useEffect(() => {
+    if (!displayPromo?.valid_until) return;
+
+    const targetDate = new Date(displayPromo.valid_until).getTime();
 
     const tick = () => {
       const now = Date.now();
@@ -99,7 +111,7 @@ const CountdownDeal = () => {
     tick();
     const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
-  }, [promo]);
+  }, [displayPromo?.valid_until]);
 
   if (loading) return (
     <div className="h-64 flex items-center justify-center">
@@ -107,7 +119,8 @@ const CountdownDeal = () => {
     </div>
   );
 
-  if (!promo || !product) return null;
+  // Don't render if we have absolutely no products at all
+  if (!product) return null;
 
   const pad = (n: number) => n.toString().padStart(2, "0");
 
@@ -130,7 +143,7 @@ const CountdownDeal = () => {
               </div>
               <span className="absolute top-4 right-4 bg-accent text-accent-foreground font-bold text-lg w-16 h-16 rounded-full flex flex-col items-center justify-center shadow-lg countdown-pulse">
                 <span className="text-[10px] leading-none uppercase">Offre</span>
-                <span className="text-xl leading-none">-{promo.discount_percent ? promo.discount_percent + '%' : 'K'}</span>
+                <span className="text-xl leading-none">-{displayPromo.discount_percent ? displayPromo.discount_percent + '%' : '🔥'}</span>
               </span>
             </Link>
           </div>
@@ -140,7 +153,7 @@ const CountdownDeal = () => {
             <div className="flex items-center justify-center lg:justify-start gap-2 mb-3">
               <Clock className="w-5 h-5 text-accent" />
               <span className="text-accent font-bold font-sans text-sm uppercase tracking-wider">
-                {promo.description || "Offre du moment — Fin dans :"}
+                {displayPromo.description || "Offre du moment — Fin dans :"}
               </span>
             </div>
 

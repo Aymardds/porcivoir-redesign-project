@@ -4,6 +4,7 @@ interface SendEmailOptions {
   order: any;
   type: 'order_confirmed' | 'order_shipped' | 'invoice';
   client_email: string;
+  invoice_base64?: string;
 }
 
 /**
@@ -12,10 +13,10 @@ interface SendEmailOptions {
  * which calls Resend internally.
  */
 export const useEmailNotification = () => {
-  const sendEmail = async ({ order, type, client_email }: SendEmailOptions) => {
+  const sendEmail = async ({ order, type, client_email, invoice_base64 }: SendEmailOptions) => {
     try {
       const { data, error } = await supabase.functions.invoke('send-order-email', {
-        body: { order, type, client_email },
+        body: { order, type, client_email, invoice_base64 },
       });
 
       if (error) throw error;

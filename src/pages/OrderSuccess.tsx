@@ -1,6 +1,5 @@
 import { useLocation, Link, Navigate } from "react-router-dom";
 import { CheckCircle2, ShoppingBag, ArrowRight, MessageCircle } from "lucide-react";
-import TopBar from "@/components/TopBar";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -18,7 +17,6 @@ export default function OrderSuccess() {
 
   return (
     <div className="min-h-screen flex flex-col bg-card">
-      <TopBar />
       <Header />
       
       <main className="flex-1 flex flex-col items-center justify-center py-20 px-4 container">

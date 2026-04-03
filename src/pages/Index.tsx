@@ -1,12 +1,12 @@
 import { Link } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
-import TopBar from "@/components/TopBar";
 import Header from "@/components/Header";
 import HeroSlider from "@/components/HeroSlider";
 import CategoryGrid from "@/components/CategoryGrid";
 import TabbedProducts from "@/components/TabbedProducts";
 import PromoBanners from "@/components/PromoBanners";
 import CountdownDeal from "@/components/CountdownDeal";
+import PromoDealBanner from "@/components/PromoDealBanner";
 import ProductGrid from "@/components/ProductGrid";
 import DeliveryBanner from "@/components/DeliveryBanner";
 import BlogSection from "@/components/BlogSection";
@@ -22,6 +22,18 @@ const Index = () => (
       <TabbedProducts />
       <PromoBanners />
       <CountdownDeal />
+
+      {/* Promo deals section */}
+      <section className="container py-10 md:py-14">
+        <div className="flex items-end justify-between mb-6 gap-4">
+          <div>
+            <p className="text-xs font-black uppercase tracking-widest text-primary mb-1">Codes Promo</p>
+            <h2 className="text-2xl md:text-3xl font-black text-foreground tracking-tight">Offres & Promotions</h2>
+          </div>
+        </div>
+        <PromoDealBanner />
+      </section>
+
       <div className="relative">
         <ProductGrid limit={8} />
         <div className="container pb-16 flex justify-center mt-[-2rem]">

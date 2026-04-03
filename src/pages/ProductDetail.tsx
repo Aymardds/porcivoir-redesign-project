@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { ShoppingCart, Minus, Plus, ArrowLeft, Heart, Loader2, Package } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useCart } from "@/context/CartContext";
-import TopBar from "@/components/TopBar";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
@@ -53,7 +52,6 @@ const ProductDetail = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
-        <TopBar />
         <Header />
         <main className="flex-1 flex flex-col items-center justify-center py-40 gap-4">
           <Loader2 className="w-10 h-10 animate-spin text-primary" />
@@ -67,7 +65,6 @@ const ProductDetail = () => {
   if (!product) {
     return (
       <div className="min-h-screen flex flex-col">
-        <TopBar />
         <Header />
         <main className="flex-1 container py-20 text-center">
           <h1 className="text-3xl mb-4">Produit introuvable</h1>
@@ -80,7 +77,6 @@ const ProductDetail = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-secondary/5">
-      <TopBar />
       <Header />
       <main className="flex-1">
         {/* Breadcrumb */}
@@ -126,7 +122,7 @@ const ProductDetail = () => {
                 <span className="text-xs text-primary font-black uppercase tracking-[0.2em] bg-primary/10 px-3 py-1 rounded inline-block mb-4">
                   {product.categories?.name || 'Général'}
                 </span>
-                <h1 className="text-4xl md:text-5xl lg:text-6xl text-foreground font-sans font-black leading-tight tracking-tighter">
+                <h1 className="text-3xl md:text-5xl lg:text-6xl text-foreground font-sans font-black leading-tight tracking-tighter">
                   {product.title}
                 </h1>
               </div>
@@ -146,26 +142,33 @@ const ProductDetail = () => {
               </div>
 
               <div className="prose prose-sm text-foreground/70 leading-relaxed max-w-xl font-medium italic">
-                {product.description || "Aucune description détaillée disponible pour ce produit pour le moment. Mais rassurez-vous, c'est l'un de nos meilleurs morceaux !"}
+                {product.description
+                  ? new DOMParser().parseFromString(product.description, "text/html").body.textContent?.trim() || product.description
+                  : "Aucune description détaillée disponible pour ce produit pour le moment. Mais rassurez-vous, c'est l'un de nos meilleurs morceaux !"}
               </div>
 
               <div className="h-px bg-border/50 w-full" />
 
               {/* Quantity + Add to cart */}
-              <div className="flex flex-col sm:flex-row gap-4 items-center">
-                <div className="flex items-center bg-card border border-border/50 rounded-xl shadow-inner p-1">
-                  <button
-                    onClick={() => setQty((q) => Math.max(1, q - 1))}
-                    className="w-12 h-12 flex items-center justify-center hover:bg-secondary rounded-lg transition-colors text-primary"
-                  >
-                    <Minus className="w-5 h-5" />
-                  </button>
-                  <span className="px-6 text-xl font-black text-center min-w-[4rem]">{qty}</span>
-                  <button
-                    onClick={() => setQty((q) => q + 1)}
-                    className="w-12 h-12 flex items-center justify-center hover:bg-secondary rounded-lg transition-colors text-primary"
-                  >
-                    <Plus className="w-5 h-5" />
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center bg-card border border-border/50 rounded-xl shadow-inner p-1">
+                    <button
+                      onClick={() => setQty((q) => Math.max(1, q - 1))}
+                      className="w-11 h-11 flex items-center justify-center hover:bg-secondary rounded-lg transition-colors text-primary"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <span className="px-4 text-lg font-black text-center min-w-[3rem]">{qty}</span>
+                    <button
+                      onClick={() => setQty((q) => q + 1)}
+                      className="w-11 h-11 flex items-center justify-center hover:bg-secondary rounded-lg transition-colors text-primary"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <button className="w-11 h-11 bg-card border border-border/50 rounded-xl flex items-center justify-center hover:text-red-500 hover:border-red-500/30 transition-all duration-300 group shadow-md shrink-0">
+                    <Heart className="w-5 h-5 group-hover:fill-red-500" />
                   </button>
                 </div>
                 <button
@@ -184,13 +187,10 @@ const ProductDetail = () => {
                     setQty(1); 
                     toast.success(`${product.title} ajouté au panier`);
                   }}
-                  className="flex-1 h-14 flex items-center justify-center gap-3 bg-foreground text-card rounded-xl font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all duration-300 shadow-xl transform hover:-translate-y-1"
+                  className="w-full h-14 flex items-center justify-center gap-3 bg-foreground text-card rounded-xl font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all duration-300 shadow-xl active:scale-95"
                 >
                   <ShoppingCart className="w-5 h-5" />
                   Ajouter au panier
-                </button>
-                <button className="w-14 h-14 bg-card border border-border/50 rounded-xl flex items-center justify-center hover:text-red-500 hover:border-red-500/30 transition-all duration-300 group shadow-md">
-                  <Heart className="w-6 h-6 group-hover:fill-red-500" />
                 </button>
               </div>
 

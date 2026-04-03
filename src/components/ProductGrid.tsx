@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useCart } from "@/context/CartContext";
 import { toast } from "sonner";
+import MiniCountdown from "@/components/MiniCountdown";
 
 const ProductGrid = ({ limit, initialCategory = "Tout" }: { limit?: number; initialCategory?: string }) => {
   const { addItem } = useCart();
@@ -11,6 +12,8 @@ const ProductGrid = ({ limit, initialCategory = "Tout" }: { limit?: number; init
   const [categories, setCategories] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [loading, setLoading] = useState(true);
+  const [promoProducts, setPromoProducts] = useState<Set<string>>(new Set());
+  const [promoDates, setPromoDates] = useState<Record<string, string>>({});
 
   useEffect(() => {
     setSelectedCategory(initialCategory);
@@ -23,9 +26,10 @@ const ProductGrid = ({ limit, initialCategory = "Tout" }: { limit?: number; init
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-      const [prodRes, catRes] = await Promise.all([
+      const [prodRes, catRes, promoRes] = await Promise.all([
         supabase.from('products').select('*, categories(name)').order('created_at', { ascending: false }),
-        supabase.from('categories').select('name').order('name')
+        supabase.from('categories').select('name').order('name'),
+        supabase.from('promotion_products').select('product_id, promotions!inner(is_active, valid_until)').eq('promotions.is_active', true)
       ]);
 
       if (prodRes.error) throw prodRes.error;
@@ -33,6 +37,17 @@ const ProductGrid = ({ limit, initialCategory = "Tout" }: { limit?: number; init
       
       if (catRes.data) {
         setCategories(["Tout", ...catRes.data.map(c => c.name)]);
+      }
+
+      if (promoRes.data) {
+        setPromoProducts(new Set(promoRes.data.map(p => p.product_id)));
+        const dates: Record<string, string> = {};
+        promoRes.data.forEach((p: any) => {
+          if (p.promotions?.valid_until) {
+            dates[p.product_id] = p.promotions.valid_until;
+          }
+        });
+        setPromoDates(dates);
       }
     } catch (error: any) {
       console.error("Error fetching public products:", error);
@@ -78,7 +93,7 @@ const ProductGrid = ({ limit, initialCategory = "Tout" }: { limit?: number; init
           <p className="text-muted-foreground font-medium italic">Préparation de vos morceaux favoris...</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
           {filteredProducts.map((product) => (
             <div
               key={product.id}
@@ -98,9 +113,9 @@ const ProductGrid = ({ limit, initialCategory = "Tout" }: { limit?: number; init
                   </div>
                 )}
                 
-                {product.original_price > product.price && (
+                {(product.original_price > product.price || promoProducts.has(product.id)) && (
                   <span className="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-black px-2.5 py-1 rounded-sm shadow-md">
-                    - {Math.round(((product.original_price - product.price) / product.original_price) * 100)}%
+                    PROMO {product.original_price > product.price ? `-${Math.round(((product.original_price - product.price) / product.original_price) * 100)}%` : ''}
                   </span>
                 )}
 
@@ -112,6 +127,8 @@ const ProductGrid = ({ limit, initialCategory = "Tout" }: { limit?: number; init
                     <Eye className="w-4 h-4" />
                   </button>
                 </div>
+                
+                {promoDates[product.id] && <MiniCountdown targetDate={promoDates[product.id]} />}
               </Link>
               
               <div className="p-5 flex-1 flex flex-col">
@@ -128,8 +145,8 @@ const ProductGrid = ({ limit, initialCategory = "Tout" }: { limit?: number; init
                 </Link>
 
                 <div className="mt-4 flex flex-col gap-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl font-black text-foreground">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-lg md:text-xl font-black text-foreground">
                       {product.price.toLocaleString()} FCFA
                     </span>
                     {product.original_price > product.price && (
@@ -153,10 +170,10 @@ const ProductGrid = ({ limit, initialCategory = "Tout" }: { limit?: number; init
                     category: product.categories?.name || 'Général',
                     description: product.description || ''
                   })}
-                  className="mt-5 w-full flex items-center justify-center gap-2 bg-foreground text-card py-3 rounded-lg text-xs font-black uppercase tracking-tighter hover:bg-primary hover:text-white transition-all duration-300 shadow-sm"
+                  className="mt-4 w-full flex items-center justify-center gap-2 bg-foreground text-card py-3 rounded-xl text-xs font-black uppercase tracking-tighter hover:bg-primary hover:text-white transition-all duration-300 shadow-sm active:scale-95"
                 >
                   <ShoppingCart className="w-4 h-4" />
-                  Ajouter au Panier
+                  <span className="hidden sm:inline">Ajouter au </span>Panier
                 </button>
               </div>
             </div>

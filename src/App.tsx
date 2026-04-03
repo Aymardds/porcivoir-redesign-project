@@ -19,6 +19,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Login from "./pages/Login.tsx";
 import Register from "./pages/Register.tsx";
+import CustomerDashboard from "./pages/CustomerDashboard.tsx";
 import AdminLayout from "./pages/admin/AdminLayout.tsx";
 import Dashboard from "./pages/admin/Dashboard.tsx";
 import InventoryManagement from "./pages/admin/InventoryManagement.tsx";
@@ -56,6 +57,7 @@ const App = () => (
               <Route path="/blog/:slug" element={<BlogPost />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/mon-compte" element={<CustomerDashboard />} />
               
               {/* Admin Secure Routes */}
               <Route element={<ProtectedRoute allowedRoles={['admin', 'editor', 'seo', 'stock_manager']} />}>

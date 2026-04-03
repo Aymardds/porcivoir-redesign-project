@@ -23,29 +23,25 @@ const Register = () => {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+          }
+        }
       });
 
       if (authError) {
         throw authError;
       }
 
-      const user = authData.user;
-      if (user) {
-        // 2. Add profile data linked to auth user
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: user.id,
-            first_name: firstName,
-            last_name: lastName,
-            role: 'customer',
-          });
-
-        if (profileError) {
-          throw profileError;
+      if (authData.user) {
+        // If a session exists, they are logged in. If not, they must confirm email.
+        if (authData.session) {
+          toast.success("Inscription réussie ! Vous êtes maintenant connecté.");
+        } else {
+          toast.success("Inscription réussie ! Veuillez vérifier vos e-mails pour confirmer votre compte.");
         }
-
-        toast.success("Inscription réussie ! Vous êtes maintenant connecté.");
         navigate('/');
       }
     } catch (error: any) {
