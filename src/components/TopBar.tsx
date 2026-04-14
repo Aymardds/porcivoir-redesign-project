@@ -26,7 +26,7 @@ const TopBar = () => {
 
   const promoItems = promos.map(p => ({
     icon: Star,
-    text: `PROMO : -${p.discount_percent ? p.discount_percent + '%' : p.discount_amount + ' FCFA'} avec le code ${p.code} !`
+    text: `PROMO : -${p.discount_percent ? p.discount_percent + '%' : p.discount_amount.toLocaleString() + ' FCFA'} avec le code ${p.code} !`
   }));
 
   const allItems = [...promoItems, ...items];

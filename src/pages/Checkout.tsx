@@ -7,11 +7,13 @@ import { ChevronRight, CreditCard, Truck, ShieldCheck, Loader2 } from "lucide-re
 import Header from "@/components/Header";
 import { useEmailNotification } from "@/hooks/useEmailNotification";
 import { useAuth } from "@/context/AuthContext";
-import { generateInvoicePdfBase64 } from "@/utils/generateInvoice";
+
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { generateInvoicePdf } from "@/utils/generateInvoicePdf";
+
 
 const DELIVERY_AREAS = [
   { name: "Abidjan - Cocody", price: 2000 },
@@ -219,25 +221,43 @@ export default function Checkout() {
         }
       }
 
-      // 4. Generate Invoice and Send Email
+      // 4. Send Invoice Email automatically
       if (formData.email) {
         try {
-          const invoiceBase64 = await generateInvoicePdfBase64(order, orderItems);
-          // Only send the email, wait for it so it goes through smoothly, or don't block
-          // but doing it before clearCart ensures we don't lose context if unmounted.
+          // Generate PDF invoice on the fly
+          const invoiceBase64 = generateInvoicePdf({
+            id: order.id,
+            customer_name: `${formData.firstName} ${formData.lastName}`,
+            customer_phone: formData.phone,
+            shipping_address: formData.address,
+            shipping_area: formData.area,
+            total_amount: finalTotal,
+            delivery_fee: deliveryFee,
+            payment_method: paymentMethod,
+            created_at: order.created_at,
+            items: orderItems.map(item => ({
+              product_name: item.product_name,
+              quantity: item.quantity,
+              unit_price: item.unit_price,
+              total_price: item.total_price,
+            })),
+          });
+
+          // Send the email with the invoice attached
           const { error: sendErr } = await sendEmail({
-            order: { ...order, items: orderItems },
-            type: "order_confirmed",
+            order: { ...order, items: orderItems, client_name: `${formData.firstName} ${formData.lastName}` },
+            type: "invoice",
             client_email: formData.email,
             invoice_base64: invoiceBase64
           });
+          
           if (sendErr) throw new Error(sendErr);
         } catch (emailErr: any) {
-          console.error("Failed to send email/invoice:", emailErr);
-          toast.error(`La commande est validée, mais l'envoi de l'email a échoué: ${emailErr?.message || emailErr}`);
-          // Let the order succeed even if email fails
+          console.error("Failed to send automatic invoice:", emailErr);
+          toast.error(`La commande est validée, mais l'envoi de la facture a échoué: ${emailErr?.message || emailErr}`);
         }
       }
+
 
       // 5. Clear cart and redirect
       clearCart();

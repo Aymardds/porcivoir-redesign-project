@@ -1,16 +1,22 @@
 import { useState, useEffect } from 'react';
 import { supabaseAdmin } from '@/lib/supabase';
-import { Search, Eye, Filter, ArrowUpDown, Mail } from 'lucide-react';
+import { Search, Eye, Filter, ArrowUpDown, Mail, FileText, X, Loader2, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { useEmailNotification } from '@/hooks/useEmailNotification';
+import { generateInvoicePdf } from '@/utils/generateInvoicePdf';
 
 export default function OrdersManagement() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const { sendEmail } = useEmailNotification();
+
+  // Invoice modal state
+  const [invoiceModal, setInvoiceModal] = useState<{ open: boolean; order: any | null }>({ open: false, order: null });
+  const [invoiceEmail, setInvoiceEmail] = useState('');
+  const [sendingInvoice, setSendingInvoice] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -43,7 +49,6 @@ export default function OrdersManagement() {
 
       if (error) throw error;
 
-      // Auto-send email notification on shipping
       if (newStatus === 'shipped') {
         const order = orders.find(o => o.id === orderId);
         if (order?.profiles?.email) {
@@ -63,34 +68,93 @@ export default function OrdersManagement() {
       } else {
         toast.success('Statut de la commande mis à jour');
       }
-      
+
       fetchOrders();
     } catch (error: any) {
       toast.error('Erreur lors de la mise à jour');
     }
   };
 
-  const sendInvoiceEmail = async (order: any) => {
-    if (!order?.customer_email) {
-      toast.error('Email client non disponible');
+  // Open invoice modal: load items then open
+  const openInvoiceModal = async (order: any) => {
+    try {
+      // Step 1: fetch order items (names are stored directly in this table)
+      const { data: items, error: itemsError } = await supabaseAdmin
+        .from('order_items')
+        .select('product_name, quantity, unit_price, total_price')
+        .eq('order_id', order.id);
+
+      if (itemsError) throw itemsError;
+
+      const enrichedOrder = {
+        ...order,
+        items: (items || []).map((item: any) => ({
+          product_name: item.product_name ?? 'Produit',
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          total_price: item.total_price,
+        })),
+      };
+
+      setInvoiceModal({ open: true, order: enrichedOrder });
+      setInvoiceEmail(order.customer_email || '');
+    } catch (err: any) {
+      toast.error('Erreur lors du chargement des détails de la commande');
+      console.error(err);
+    }
+  };
+
+
+
+  const handleSendInvoice = async () => {
+    if (!invoiceModal.order) return;
+    if (!invoiceEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(invoiceEmail)) {
+      toast.error('Veuillez entrer une adresse email valide.');
       return;
     }
-    toast.promise(
-      sendEmail({
-        order: { ...order, client_name: order.customer_name },
-        type: 'order_confirmed',
-        client_email: order.customer_email,
-      }),
-      {
-        loading: 'Envoi de la facture...',
-        success: 'Facture envoyée avec succès !',
-        error: 'Erreur lors de l\'envoi',
+
+    setSendingInvoice(true);
+    try {
+      const order = invoiceModal.order;
+
+      // Generate PDF
+      const pdfBase64 = generateInvoicePdf({
+        id: order.id,
+        customer_name: order.customer_name || 'Client',
+        customer_phone: order.customer_phone,
+        shipping_address: order.shipping_address,
+        shipping_area: order.shipping_area,
+        total_amount: order.total_amount,
+        delivery_fee: order.delivery_fee,
+        payment_method: order.payment_method,
+        created_at: order.created_at,
+        items: order.items,
+      });
+
+      // Send via Resend
+      const result = await sendEmail({
+        order: { ...order, client_name: order.customer_name || 'Client' },
+        type: 'invoice',
+        client_email: invoiceEmail,
+        invoice_base64: pdfBase64,
+      });
+
+      if (result.success) {
+        toast.success(`Facture envoyée à ${invoiceEmail} !`);
+        setInvoiceModal({ open: false, order: null });
+        setInvoiceEmail('');
+      } else {
+        toast.error("Échec de l'envoi. Vérifiez la configuration Resend.");
       }
-    );
+    } catch (err: any) {
+      toast.error(err.message || "Erreur lors de la génération de la facture");
+    } finally {
+      setSendingInvoice(false);
+    }
   };
 
   const getStatusColor = (status: string) => {
-    switch(status) {
+    switch (status) {
       case 'pending': return 'bg-yellow-500/10 text-yellow-600';
       case 'processing': return 'bg-blue-500/10 text-blue-600';
       case 'shipped': return 'bg-purple-500/10 text-purple-600';
@@ -98,18 +162,6 @@ export default function OrdersManagement() {
       case 'cancelled': return 'bg-destructive/10 text-destructive';
       case 'refunded': return 'bg-gray-500/10 text-gray-600';
       default: return 'bg-secondary text-muted-foreground';
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch(status) {
-      case 'pending': return 'En attente';
-      case 'processing': return 'En cours';
-      case 'shipped': return 'Expédiée';
-      case 'delivered': return 'Livrée';
-      case 'cancelled': return 'Annulée';
-      case 'refunded': return 'Remboursée';
-      default: return status;
     }
   };
 
@@ -195,7 +247,7 @@ export default function OrdersManagement() {
                       {order.total_amount.toLocaleString()}
                     </td>
                     <td className="px-6 py-4">
-                      <select 
+                      <select
                         value={order.status}
                         onChange={(e) => updateOrderStatus(order.id, e.target.value)}
                         className={`text-xs font-bold px-2 py-1.5 rounded outline-none border-none cursor-pointer appearance-none pr-6 ${getStatusColor(order.status)}`}
@@ -216,14 +268,15 @@ export default function OrdersManagement() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-1">
+                        {/* Invoice button */}
                         <Button
                           variant="ghost"
                           size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
                           title="Envoyer la facture"
-                          className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
-                          onClick={() => sendInvoiceEmail(order)}
+                          onClick={() => openInvoiceModal(order)}
                         >
-                          <Mail className="w-4 h-4" />
+                          <FileText className="w-4 h-4" />
                         </Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                           <Eye className="w-4 h-4" />
@@ -237,6 +290,105 @@ export default function OrdersManagement() {
           </table>
         </div>
       </div>
+
+      {/* ── Invoice Modal ─────────────────────────────────────── */}
+      {invoiceModal.open && invoiceModal.order && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => !sendingInvoice && setInvoiceModal({ open: false, order: null })}
+          />
+          <div className="relative bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md animate-fade-in">
+            {/* Modal header */}
+            <div className="flex items-center justify-between p-6 border-b border-border">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-foreground">Envoyer la facture</h2>
+                  <p className="text-xs text-muted-foreground font-mono">
+                    #{invoiceModal.order.id.split('-')[0].toUpperCase()}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => !sendingInvoice && setInvoiceModal({ open: false, order: null })}
+                className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-secondary transition-colors text-muted-foreground"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Order summary inside modal */}
+            <div className="px-6 pt-5 pb-2">
+              <div className="bg-secondary/40 rounded-xl p-4 mb-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-semibold text-foreground">{invoiceModal.order.customer_name || 'Client inconnu'}</p>
+                    {invoiceModal.order.customer_phone && (
+                      <p className="text-xs text-muted-foreground mt-0.5">{invoiceModal.order.customer_phone}</p>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-muted-foreground">Total</p>
+                    <p className="font-bold text-foreground text-lg">
+                      {invoiceModal.order.total_amount.toLocaleString('fr-FR')} FCFA
+                    </p>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  {invoiceModal.order.items.length} article{invoiceModal.order.items.length !== 1 ? 's' : ''} •{' '}
+                  {new Date(invoiceModal.order.created_at).toLocaleDateString('fr-FR')}
+                </p>
+              </div>
+
+              <div className="space-y-1.5 pb-5">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Email destinataire <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    type="email"
+                    placeholder="client@email.com"
+                    value={invoiceEmail}
+                    onChange={(e) => setInvoiceEmail(e.target.value)}
+                    className="pl-9 bg-secondary/50 border-transparent focus:border-primary"
+                    disabled={sendingInvoice}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  La facture PDF sera jointe à l'email envoyé via Resend.
+                </p>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 px-6 pb-6">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setInvoiceModal({ open: false, order: null })}
+                disabled={sendingInvoice}
+              >
+                Annuler
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={handleSendInvoice}
+                disabled={sendingInvoice}
+              >
+                {sendingInvoice ? (
+                  <><Loader2 className="w-4 h-4 animate-spin mr-2" />Génération...</>
+                ) : (
+                  <><Send className="w-4 h-4 mr-2" />Envoyer la facture</>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

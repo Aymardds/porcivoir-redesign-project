@@ -8,7 +8,6 @@ import TopBar from "./TopBar";
 
 const navItems = [
   { label: "Accueil", href: "/" },
-  { label: "Demander un Devis", href: "/devis" },
   { label: "Boutique", href: "/boutique" },
   { label: "Devenir Partenaire", href: "/#partenaire" },
   { label: "Actualités", href: "/blog" },

@@ -8,6 +8,7 @@ import PromoBanners from "@/components/PromoBanners";
 import CountdownDeal from "@/components/CountdownDeal";
 import PromoDealBanner from "@/components/PromoDealBanner";
 import ProductGrid from "@/components/ProductGrid";
+import ServicesCTA from "@/components/ServicesCTA";
 import DeliveryBanner from "@/components/DeliveryBanner";
 import BlogSection from "@/components/BlogSection";
 import TrustBar from "@/components/TrustBar";
@@ -23,16 +24,7 @@ const Index = () => (
       <PromoBanners />
       <CountdownDeal />
 
-      {/* Promo deals section */}
-      <section className="container py-10 md:py-14">
-        <div className="flex items-end justify-between mb-6 gap-4">
-          <div>
-            <p className="text-xs font-black uppercase tracking-widest text-primary mb-1">Codes Promo</p>
-            <h2 className="text-2xl md:text-3xl font-black text-foreground tracking-tight">Offres & Promotions</h2>
-          </div>
-        </div>
-        <PromoDealBanner />
-      </section>
+      <PromoDealBanner />
 
       <div className="relative">
         <ProductGrid limit={8} />
@@ -46,6 +38,7 @@ const Index = () => (
           </Link>
         </div>
       </div>
+      <ServicesCTA />
       <DeliveryBanner />
       <BlogSection />
     </main>

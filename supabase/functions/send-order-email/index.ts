@@ -5,7 +5,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const FROM_EMAIL = "noreply@porcivoir.com"; // Configurez votre domaine dans Resend
+const FROM_EMAIL = "team@porcivoir.com"; // Correspondance avec vos réglages Supabase
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -108,6 +108,83 @@ const getShippedEmail = (order: any) => `
 </html>
 `;
 
+const getInvoiceEmail = (order: any) => `
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Votre facture – Porc'Ivoire</title>
+</head>
+<body style="margin:0;padding:0;background:#f5f0ea;font-family:'Helvetica Neue',Arial,sans-serif;">
+  <div style="max-width:600px;margin:32px auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+    <!-- Header -->
+    <div style="background:linear-gradient(135deg, #1a2e1a 0%, #2d4a2d 100%);padding:32px;text-align:center;">
+      <h1 style="color:#fff;margin:0;font-size:26px;font-weight:700;letter-spacing:-0.5px">Porc'Ivoire</h1>
+      <p style="color:rgba(255,255,255,0.6);margin:8px 0 0;font-size:13px">Produit par les meilleures fermes d'ici</p>
+    </div>
+    <!-- Body -->
+    <div style="padding:40px 32px;">
+      <!-- Icon + Title -->
+      <div style="text-align:center;margin-bottom:28px;">
+        <div style="display:inline-block;background:#f0f9f4;border-radius:50%;width:56px;height:56px;line-height:56px;font-size:28px;">🧾</div>
+        <h2 style="color:#1a2e1a;margin:12px 0 4px;font-size:22px;">Votre facture est disponible</h2>
+        <p style="color:#888;margin:0;font-size:14px;">Commande <strong style="color:#009a55;font-family:monospace;">#${order.id.split('-')[0].toUpperCase()}</strong></p>
+      </div>
+
+      <p style="color:#555;line-height:1.7;margin:0 0 24px;">
+        Bonjour <strong>${order.client_name || 'Client'}</strong>,<br>
+        Veuillez trouver ci-joint la facture correspondant à votre commande passée le
+        <strong>${new Date(order.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</strong>.
+      </p>
+
+      <!-- Summary card -->
+      <div style="background:linear-gradient(135deg,#f0f9f4,#e8f5ee);border-radius:10px;padding:24px;margin-bottom:24px;border:1px solid #c8e6d4;">
+        <table style="width:100%;border-collapse:collapse;">
+          <tr>
+            <td style="padding:6px 0;font-size:13px;color:#666;">Référence commande</td>
+            <td style="padding:6px 0;font-size:13px;font-weight:700;color:#1a2e1a;text-align:right;font-family:monospace;">#${order.id.split('-')[0].toUpperCase()}</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 0;font-size:13px;color:#666;">Date</td>
+            <td style="padding:6px 0;font-size:13px;color:#333;text-align:right;">${new Date(order.created_at).toLocaleDateString('fr-FR')}</td>
+          </tr>
+          ${order.delivery_fee ? `
+          <tr>
+            <td style="padding:6px 0;font-size:13px;color:#666;">Livraison</td>
+            <td style="padding:6px 0;font-size:13px;color:#333;text-align:right;">${Number(order.delivery_fee).toLocaleString('fr-FR')} FCFA</td>
+          </tr>
+          ` : ''}
+          <tr>
+            <td style="padding:10px 0 0;font-size:16px;font-weight:700;color:#1a2e1a;border-top:2px solid #009a55;">TOTAL TTC</td>
+            <td style="padding:10px 0 0;font-size:18px;font-weight:700;color:#009a55;text-align:right;border-top:2px solid #009a55;">${Number(order.total_amount).toLocaleString('fr-FR')} FCFA</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- PDF notice -->
+      <div style="background:#fffbf0;border-left:3px solid #ff7700;border-radius:0 8px 8px 0;padding:14px 16px;margin-bottom:24px;">
+        <p style="margin:0;font-size:13px;color:#555;">
+          📎 <strong>La facture PDF</strong> est jointe à cet email. Vous pouvez la télécharger et la conserver pour vos archives.
+        </p>
+      </div>
+
+      <p style="color:#888;font-size:13px;line-height:1.6;">
+        Si vous avez la moindre question concernant cette facture, n'hésitez pas à nous contacter.<br>
+        Notre équipe se fera un plaisir de vous aider.
+      </p>
+    </div>
+    <!-- Footer -->
+    <div style="background:#1a2e1a;padding:28px;text-align:center;">
+      <p style="color:#fff;margin:0 0 6px;font-size:14px;font-weight:600;">Porc'Ivoire</p>
+      <p style="color:#ff7700;margin:0 0 6px;font-size:12px;">porcivoir.com  •  +225 07 87 295 734  •  contact@porcivoir.com</p>
+      <p style="color:rgba(255,255,255,0.35);margin:0;font-size:11px;">© ${new Date().getFullYear()} Porc'Ivoire — Abidjan, Côte d'Ivoire</p>
+    </div>
+  </div>
+</body>
+</html>
+`;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -135,6 +212,10 @@ serve(async (req) => {
         subject = `🚚 Votre commande est en route – Porc'Ivoire`;
         html = getShippedEmail(order);
         break;
+      case "invoice":
+        subject = `🧾 Votre facture – Porc'Ivoire #${order.id.split('-')[0].toUpperCase()}`;
+        html = getInvoiceEmail(order);
+        break;
       default:
         return new Response(
           JSON.stringify({ error: `Unknown email type: ${type}` }),
@@ -142,13 +223,12 @@ serve(async (req) => {
         );
     }
 
-    const attachments = [];
+    const attachments: any[] = [];
     if (invoice_base64) {
-      // Remove data URI prefix if present (e.g. "data:application/pdf;base64,")
-      const base64Content = invoice_base64.includes(",") 
-        ? invoice_base64.split(",")[1] 
+      const base64Content = invoice_base64.includes(",")
+        ? invoice_base64.split(",")[1]
         : invoice_base64;
-        
+
       attachments.push({
         filename: `Facture_PorcIvoire_${order.id.split('-')[0].toUpperCase()}.pdf`,
         content: base64Content,
@@ -161,7 +241,7 @@ serve(async (req) => {
       subject,
       html,
     };
-    
+
     if (attachments.length > 0) {
       payload.attachments = attachments;
     }

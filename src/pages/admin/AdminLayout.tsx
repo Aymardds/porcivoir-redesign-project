@@ -10,9 +10,7 @@ import {
   Menu,
   X,
   Settings,
-  FileText,
-  Calculator,
-  Briefcase
+  FileText
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -30,8 +28,6 @@ const AdminLayout = () => {
     { name: 'Catégories', href: '/admin/categories', icon: Tag },
     { name: 'Clients', href: '/admin/customers', icon: Users },
     { name: 'Blog', href: '/admin/blog', icon: FileText },
-    { name: 'Devis', href: '/admin/quotes', icon: Calculator },
-    { name: 'Services Agri', href: '/admin/services', icon: Briefcase },
     { name: 'Promotions', href: '/admin/promotions', icon: Tag },
   ];
 
