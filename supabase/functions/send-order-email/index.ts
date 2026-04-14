@@ -205,7 +205,7 @@ serve(async (req) => {
 
     switch (type) {
       case "order_confirmed":
-        subject = `✅ Commande confirmée – Porc'Ivoire #${order.id.split('-')[0].toUpperCase()}`;
+        subject = `🍽️ Confirmation de Commande #${order.id.split('-')[0].toUpperCase()} – Porc'Ivoire`;
         html = getOrderConfirmationEmail(order);
         break;
       case "order_shipped":

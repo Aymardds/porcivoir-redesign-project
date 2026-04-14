@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import logo from '@/assets/logo-porcivoir.png';
 
 export interface InvoiceOrder {
   id: string;
@@ -29,21 +30,30 @@ export function generateInvoicePdf(order: InvoiceOrder): string {
 
   // ── Header band ──────────────────────────────────────────────
   doc.setFillColor(...primaryGreen);
-  doc.rect(0, 0, pageW, 38, 'F');
+  doc.rect(0, 0, pageW, 42, 'F');
+
+  // Add Logo
+  try {
+    doc.addImage(logo, 'PNG', 15, 8, 25, 25);
+  } catch (e) {
+    console.error("PDF Logo Error:", e);
+    // Fallback to text if logo fails
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.text("Porc'Ivoire", 15, 17);
+  }
 
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(22);
-  doc.setFont('helvetica', 'bold');
-  doc.text("Porc'Ivoire", 15, 17);
-
-  doc.setFontSize(9);
+  doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text('Produit par les meilleures fermes d\'ici', 15, 24);
+  doc.text('Produit par les meilleures fermes d\'ici', 45, 18);
+  doc.setFontSize(8);
   doc.text([
     'Abidjan, Côte d\'Ivoire',
     '+225 07 87 295 734',
     'contact@porcivoir.com',
-  ], 15, 29);
+  ], 45, 24);
 
   // FACTURE label (right)
   doc.setFontSize(28);
@@ -63,27 +73,27 @@ export function generateInvoicePdf(order: InvoiceOrder): string {
 
   doc.setFontSize(9);
   doc.setTextColor(100, 100, 100);
-  doc.text(`Date d'émission : ${issueDate}`, pageW - 15, 45, { align: 'right' });
+  doc.text(`Date d'émission : ${issueDate}`, pageW - 15, 48, { align: 'right' });
 
   // ── Bill To ───────────────────────────────────────────────────
   doc.setFillColor(...lightGray);
-  doc.roundedRect(13, 42, 85, 30, 2, 2, 'F');
+  doc.roundedRect(13, 46, 85, 30, 2, 2, 'F');
 
   doc.setFontSize(8);
   doc.setTextColor(150, 150, 150);
   doc.setFont('helvetica', 'bold');
-  doc.text('FACTURÉ À', 18, 50);
+  doc.text('FACTURÉ À', 18, 54);
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
   doc.setTextColor(...darkGreen);
-  doc.text(order.customer_name || 'Client', 18, 57);
+  doc.text(order.customer_name || 'Client', 18, 61);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(80, 80, 80);
-  if (order.customer_phone) doc.text(`📞 ${order.customer_phone}`, 18, 63);
-  doc.text(`📍 ${order.shipping_address}${order.shipping_area ? `, ${order.shipping_area}` : ''}`, 18, 68, {
+  if (order.customer_phone) doc.text(`📞 ${order.customer_phone}`, 18, 67);
+  doc.text(`📍 ${order.shipping_address}${order.shipping_area ? `, ${order.shipping_area}` : ''}`, 18, 72, {
     maxWidth: 78,
   });
 
@@ -92,7 +102,7 @@ export function generateInvoicePdf(order: InvoiceOrder): string {
   const deliveryFee = order.delivery_fee ?? 0;
 
   autoTable(doc, {
-    startY: 80,
+    startY: 85,
     head: [['Article', 'Qté', 'Prix unitaire', 'Total']],
     body: order.items.map(item => [
       item.product_name,
@@ -145,19 +155,19 @@ export function generateInvoicePdf(order: InvoiceOrder): string {
   doc.line(totalsX - 2, finalY + 10, totalsX + totalsW, finalY + 10);
 
   doc.setFillColor(...primaryGreen);
-  doc.roundedRect(totalsX - 4, finalY + 12, totalsW + 6, 10, 2, 2, 'F');
+  doc.roundedRect(totalsX - 4, finalY + 12, totalsW + 6, 12, 2, 2, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  doc.text('TOTAL', totalsX, finalY + 19);
-  doc.text(`${order.total_amount.toLocaleString('fr-FR')} FCFA`, totalsX + totalsW, finalY + 19, { align: 'right' });
+  doc.setFontSize(12);
+  doc.text('TOTAL', totalsX, finalY + 20);
+  doc.text(`${order.total_amount.toLocaleString('fr-FR')} FCFA`, totalsX + totalsW, finalY + 20, { align: 'right' });
 
   // Payment method
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(130, 130, 130);
   const payMethod = order.payment_method === 'online' ? 'Paiement en ligne (CinetPay)' : 'Paiement à la livraison';
-  doc.text(`Mode de paiement : ${payMethod}`, 13, finalY + 19);
+  doc.text(`Mode de paiement : ${payMethod}`, 13, finalY + 20);
 
   // ── Footer ────────────────────────────────────────────────────
   const pageH = doc.internal.pageSize.getHeight();

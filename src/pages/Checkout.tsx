@@ -252,6 +252,16 @@ export default function Checkout() {
           });
           
           if (sendErr) throw new Error(sendErr);
+
+          // Mark invoice as sent in DB
+          await supabaseAdmin
+            .from("orders")
+            .update({ 
+              invoice_sent: true,
+              invoice_sent_at: new Date().toISOString()
+            })
+            .eq("id", order.id);
+            
         } catch (emailErr: any) {
           console.error("Failed to send automatic invoice:", emailErr);
           toast.error(`La commande est validée, mais l'envoi de la facture a échoué: ${emailErr?.message || emailErr}`);

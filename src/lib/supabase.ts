@@ -14,6 +14,26 @@ export const supabase = createClient(
   supabaseAnonKey || 'placeholder'
 );
 
+// Session Cleanup Logic: Immediately check for stale tokens that cause 400 errors.
+(async () => {
+  try {
+    const { error } = await supabase.auth.getSession();
+    if (error && (error.message.includes('400') || error.message.includes('refresh_token_not_found'))) {
+      console.warn('Stale session detected, clearing storage...');
+      // Clear all possible Supabase keys from localStorage to break the loop
+      Object.keys(localStorage).forEach(key => {
+        if (key.includes('supabase.auth.token') || key.includes('sb-')) {
+          localStorage.removeItem(key);
+        }
+      });
+      // Optionally reload to start fresh
+      window.location.reload();
+    }
+  } catch (e) {
+    // Ignore initialization errors here; let the app handle auth state
+  }
+})();
+
 // Admin client — bypasses RLS for trusted server-side operations like order creation.
 // NOTE: Never expose this key to end users or in public-facing code beyond order writes.
 export const supabaseAdmin = createClient(

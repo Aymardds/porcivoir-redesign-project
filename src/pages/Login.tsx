@@ -81,6 +81,14 @@ const Login = () => {
               required
               className="w-full"
             />
+            <div className="flex justify-end">
+              <Link 
+                to="/forgot-password" 
+                className="text-xs text-primary hover:underline font-medium"
+              >
+                Mot de passe oublié ?
+              </Link>
+            </div>
           </div>
 
           <Button

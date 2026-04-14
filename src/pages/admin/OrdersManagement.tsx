@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabaseAdmin } from '@/lib/supabase';
-import { Search, Eye, Filter, ArrowUpDown, Mail, FileText, X, Loader2, Send } from 'lucide-react';
+import { Search, Eye, Filter, ArrowUpDown, Mail, FileText, X, Loader2, Send, Download, TrendingUp, Clock, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
@@ -12,6 +12,14 @@ export default function OrdersManagement() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const { sendEmail } = useEmailNotification();
+  
+  // Stats
+  const [stats, setStats] = useState({
+    totalRevenue: 0,
+    pendingAmount: 0,
+    invoiceSentCount: 0,
+    totalOrders: 0
+  });
 
   // Invoice modal state
   const [invoiceModal, setInvoiceModal] = useState<{ open: boolean; order: any | null }>({ open: false, order: null });
@@ -32,12 +40,32 @@ export default function OrdersManagement() {
 
       if (error) throw error;
       setOrders(data || []);
+      calculateStats(data || []);
     } catch (error: any) {
       toast.error('Erreur lors du chargement des commandes');
       console.error(error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const calculateStats = (ordersList: any[]) => {
+    const totalRevenue = ordersList
+      .filter(o => o.status !== 'cancelled' && o.status !== 'refunded')
+      .reduce((acc, o) => acc + Number(o.total_amount), 0);
+    
+    const pendingAmount = ordersList
+      .filter(o => o.status === 'pending')
+      .reduce((acc, o) => acc + Number(o.total_amount), 0);
+    
+    const invoiceSentCount = ordersList.filter(o => o.invoice_sent).length;
+
+    setStats({
+      totalRevenue,
+      pendingAmount,
+      invoiceSentCount,
+      totalOrders: ordersList.length
+    });
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
@@ -106,6 +134,32 @@ export default function OrdersManagement() {
 
 
 
+  const handleDownloadInvoice = (order: any) => {
+    try {
+      const pdfBase64 = generateInvoicePdf({
+        id: order.id,
+        customer_name: order.customer_name || 'Client',
+        customer_phone: order.customer_phone,
+        shipping_address: order.shipping_address,
+        shipping_area: order.shipping_area,
+        total_amount: order.total_amount,
+        delivery_fee: order.delivery_fee,
+        payment_method: order.payment_method,
+        created_at: order.created_at,
+        items: order.items,
+      });
+
+      // Simple browser download
+      const link = document.createElement('a');
+      link.href = pdfBase64;
+      link.download = `Facture_PorcIvoire_${order.id.split('-')[0].toUpperCase()}.pdf`;
+      link.click();
+      toast.success('Facture téléchargée');
+    } catch (err: any) {
+      toast.error('Erreur de génération PDF');
+    }
+  };
+
   const handleSendInvoice = async () => {
     if (!invoiceModal.order) return;
     if (!invoiceEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(invoiceEmail)) {
@@ -140,9 +194,16 @@ export default function OrdersManagement() {
       });
 
       if (result.success) {
+        // Update DB
+        await supabaseAdmin
+          .from('orders')
+          .update({ invoice_sent: true, invoice_sent_at: new Date().toISOString() })
+          .eq('id', order.id);
+
         toast.success(`Facture envoyée à ${invoiceEmail} !`);
         setInvoiceModal({ open: false, order: null });
         setInvoiceEmail('');
+        fetchOrders(); // Refresh to update badge
       } else {
         toast.error("Échec de l'envoi. Vérifiez la configuration Resend.");
       }
@@ -181,10 +242,73 @@ export default function OrdersManagement() {
             Gérez et suivez le traitement des commandes de vos clients.
           </p>
         </div>
-        <Button variant="outline" className="text-foreground">
-          <Filter className="w-4 h-4 mr-2" />
-          Filtrer
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" className="text-foreground">
+            <Filter className="w-4 h-4 mr-2" />
+            Filtrer
+          </Button>
+        </div>
+      </div>
+
+      {/* ── Billing Dashboard ──────────────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-card border border-border rounded-xl p-5 space-y-3">
+          <div className="flex justify-between items-start">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <TrendingUp className="w-5 h-5 text-primary" />
+            </div>
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Cumul CA</span>
+          </div>
+          <div>
+            <h3 className="text-2xl font-black">{stats.totalRevenue.toLocaleString()} <small className="text-xs font-bold opacity-50 uppercase">FCFA</small></h3>
+            <p className="text-xs text-muted-foreground mt-1">Chiffre d'affaires total TTC</p>
+          </div>
+        </div>
+
+        <div className="bg-card border border-border rounded-xl p-5 space-y-3">
+          <div className="flex justify-between items-start">
+            <div className="p-2 bg-amber-500/10 rounded-lg">
+              <Clock className="w-5 h-5 text-amber-500" />
+            </div>
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Encours</span>
+          </div>
+          <div>
+            <h3 className="text-2xl font-black">{stats.pendingAmount.toLocaleString()} <small className="text-xs font-bold opacity-50 uppercase">FCFA</small></h3>
+            <p className="text-xs text-muted-foreground mt-1">Commandes en attente</p>
+          </div>
+        </div>
+
+        <div className="bg-card border border-border rounded-xl p-5 space-y-3">
+          <div className="flex justify-between items-start">
+            <div className="p-2 bg-secondary/80 rounded-lg">
+              <FileText className="w-5 h-5 text-muted-foreground" />
+            </div>
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Facturation</span>
+          </div>
+          <div>
+            <h3 className="text-2xl font-black">{stats.invoiceSentCount} <span className="text-xs font-bold opacity-30">/ {stats.totalOrders}</span></h3>
+            <p className="text-xs text-muted-foreground mt-1">Factures envoyées</p>
+          </div>
+          <div className="w-full h-1.5 bg-secondary rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-primary" 
+              style={{ width: `${(stats.invoiceSentCount / (stats.totalOrders || 1)) * 100}%` }}
+            />
+          </div>
+        </div>
+
+        <div className="bg-card border border-border rounded-xl p-5 space-y-3">
+          <div className="flex justify-between items-start">
+            <div className="p-2 bg-blue-500/10 rounded-lg">
+              <CheckCircle2 className="w-5 h-5 text-blue-500" />
+            </div>
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Moyenne</span>
+          </div>
+          <div>
+            <h3 className="text-2xl font-black">{Math.round(stats.totalRevenue / (stats.totalOrders || 1)).toLocaleString()} <small className="text-xs font-bold opacity-50 uppercase">FCFA</small></h3>
+            <p className="text-xs text-muted-foreground mt-1">Panier moyen brut</p>
+          </div>
+        </div>
       </div>
 
       <div className="bg-card border border-border rounded-xl overflow-hidden">
@@ -209,8 +333,8 @@ export default function OrdersManagement() {
                 <th className="px-6 py-4 font-medium flex items-center gap-1 cursor-pointer">
                   Date <ArrowUpDown className="w-3 h-3" />
                 </th>
-                <th className="px-6 py-4 font-medium">Total (FCFA)</th>
-                <th className="px-6 py-4 font-medium">Statut</th>
+                <th className="px-6 py-4 font-medium text-center">Facture</th>
+                <th className="px-6 py-4 font-medium text-center">Statut</th>
                 <th className="px-6 py-4 font-medium text-right">Actions</th>
               </tr>
             </thead>
@@ -247,6 +371,26 @@ export default function OrdersManagement() {
                       {order.total_amount.toLocaleString()}
                     </td>
                     <td className="px-6 py-4">
+                      <div className="flex justify-center">
+                        {order.invoice_sent ? (
+                          <div className="flex flex-col items-center gap-0.5">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 text-[10px] font-bold">
+                              <CheckCircle2 className="w-3 h-3" /> ENVOYÉE
+                            </span>
+                            {order.invoice_sent_at && (
+                              <span className="text-[9px] text-muted-foreground opacity-60">
+                                {new Date(order.invoice_sent_at).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary text-muted-foreground text-[10px] font-bold opacity-50">
+                            <Clock className="w-3 h-3" /> NON-ENVOYÉE
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
                       <select
                         value={order.status}
                         onChange={(e) => updateOrderStatus(order.id, e.target.value)}
@@ -268,16 +412,30 @@ export default function OrdersManagement() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-1">
-                        {/* Invoice button */}
+                        {/* Download button */}
                         <Button
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
-                          title="Envoyer la facture"
+                          title="Télécharger la facture"
+                          onClick={() => {
+                            openInvoiceModal(order);
+                          }}
+                        >
+                          <Download className="w-4 h-4" />
+                        </Button>
+                        
+                        {/* Invoice button (Email) */}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                          title="Envoyer par Email"
                           onClick={() => openInvoiceModal(order)}
                         >
-                          <FileText className="w-4 h-4" />
+                          <Mail className="w-4 h-4" />
                         </Button>
+                        
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                           <Eye className="w-4 h-4" />
                         </Button>
@@ -365,26 +523,37 @@ export default function OrdersManagement() {
             </div>
 
             {/* Actions */}
-            <div className="flex gap-3 px-6 pb-6">
+            <div className="flex flex-col gap-3 px-6 pb-6">
               <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => setInvoiceModal({ open: false, order: null })}
-                disabled={sendingInvoice}
-              >
-                Annuler
-              </Button>
-              <Button
-                className="flex-1"
+                className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-bold"
                 onClick={handleSendInvoice}
                 disabled={sendingInvoice}
               >
                 {sendingInvoice ? (
-                  <><Loader2 className="w-4 h-4 animate-spin mr-2" />Génération...</>
+                  <><Loader2 className="w-4 h-4 animate-spin mr-2" />Envoi en cours...</>
                 ) : (
-                  <><Send className="w-4 h-4 mr-2" />Envoyer la facture</>
+                  <><Send className="w-4 h-4 mr-2" />Envoyer par Email</>
                 )}
               </Button>
+              
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1 h-10 font-bold border-primary/20 hover:bg-primary/5 text-primary"
+                  onClick={() => handleDownloadInvoice(invoiceModal.order)}
+                  disabled={sendingInvoice}
+                >
+                  <Download className="w-4 h-4 mr-2" /> Télécharger (PDF)
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="flex-1 h-10 font-medium"
+                  onClick={() => setInvoiceModal({ open: false, order: null })}
+                  disabled={sendingInvoice}
+                >
+                  Annuler
+                </Button>
+              </div>
             </div>
           </div>
         </div>
