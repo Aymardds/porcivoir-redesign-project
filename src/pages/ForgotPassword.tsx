@@ -17,16 +17,22 @@ const ForgotPassword = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+      const { data, error } = await supabase.functions.invoke('send-order-email', {
+        body: {
+          type: 'password_reset',
+          client_email: email,
+          order: {}, // Empty order object as it's not a purchase
+        },
       });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       setSubmitted(true);
       toast.success("E-mail de récupération envoyé !");
     } catch (error: any) {
-      toast.error(error.message || "Une erreur est survenue");
+      console.error("Recovery error:", error);
+      toast.error(error.message || "Une erreur est survenue lors de l'envoi");
     } finally {
       setLoading(false);
     }

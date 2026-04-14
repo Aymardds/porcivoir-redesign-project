@@ -3,6 +3,7 @@
 // Déclenchez cette fonction depuis votre code React après la création d'une commande.
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const FROM_EMAIL = "team@porcivoir.com"; // Correspondance avec vos réglages Supabase
@@ -11,6 +12,12 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Internal Supabase Admin client for generating secure links
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+
+const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 const getOrderConfirmationEmail = (order: any) => `
 <!DOCTYPE html>
@@ -185,6 +192,48 @@ const getInvoiceEmail = (order: any) => `
 </html>
 `;
 
+const getPasswordResetEmail = (order: any, resetLink: string) => `
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Réinitialisez votre mot de passe – Porc'Ivoire</title>
+</head>
+<body style="margin:0;padding:0;background:#f5f0ea;font-family:'Helvetica Neue',Arial,sans-serif;">
+  <div style="max-width:600px;margin:32px auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+    <!-- Header -->
+    <div style="background:linear-gradient(135deg, #1a2e1a 0%, #2d4a2d 100%);padding:32px;text-align:center;">
+      <h1 style="color:#fff;margin:0;font-size:26px;font-weight:700;letter-spacing:-0.5px">Porc'Ivoire</h1>
+    </div>
+    <!-- Body -->
+    <div style="padding:40px 32px;text-align:center;">
+      <div style="display:inline-block;background:#fef3c7;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:32px;margin-bottom:20px;">🔑</div>
+      <h2 style="color:#1a2e1a;margin:0 0 16px;font-size:22px;">Demande de réinitialisation</h2>
+      <p style="color:#555;line-height:1.7;margin:0 0 32px;text-align:left;">
+        Bonjour <strong>${order.client_name || 'Client'}</strong>,<br><br>
+        Nous avons reçu une demande de réinitialisation de mot de passe pour votre compte Porc'Ivoire. 
+        Cliquez sur le bouton ci-dessous pour définir un nouveau mot de passe.
+      </p>
+
+      <a href="${resetLink}" style="display:inline-block;background:#009a55;color:#ffffff;padding:16px 32px;border-radius:8px;text-decoration:none;font-weight:700;font-size:16px;box-shadow:0 4px 12px rgba(0,154,85,0.25);">
+        Réinitialiser mon mot de passe
+      </a>
+
+      <p style="color:#888;font-size:12px;margin-top:40px;text-align:left;">
+        <strong>Note :</strong> Ce lien est valable pendant 60 minutes. Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet email en toute sécurité.
+      </p>
+    </div>
+    <!-- Footer -->
+    <div style="background:#1a2e1a;padding:28px;text-align:center;">
+      <p style="color:#fff;margin:0 0 6px;font-size:14px;font-weight:600;">Porc'Ivoire</p>
+      <p style="color:rgba(255,255,255,0.35);margin:0;font-size:11px;">© ${new Date().getFullYear()} Porc'Ivoire — Abidjan, Côte d'Ivoire</p>
+    </div>
+  </div>
+</body>
+</html>
+`;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -193,7 +242,7 @@ serve(async (req) => {
   try {
     const { order, type, client_email, invoice_base64 } = await req.json();
 
-    if (!order || !client_email || !type) {
+    if (!client_email || !type) {
       return new Response(
         JSON.stringify({ error: "Missing required fields: order, client_email, type" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -216,6 +265,23 @@ serve(async (req) => {
         subject = `🧾 Votre facture – Porc'Ivoire #${order.id.split('-')[0].toUpperCase()}`;
         html = getInvoiceEmail(order);
         break;
+      case "password_reset": {
+        subject = `🔑 Réinitialisation de votre mot de passe – Porc'Ivoire`;
+        
+        // Use Supabase Admin to generate a single-use recovery link
+        const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+          type: 'recovery',
+          email: client_email,
+          options: {
+            redirectTo: `${req.headers.get('origin') || 'https://porcivoir-redesign-project.vercel.app'}/reset-password`
+          }
+        });
+
+        if (linkError) throw linkError;
+        
+        html = getPasswordResetEmail(order || {}, linkData.properties.action_link);
+        break;
+      }
       default:
         return new Response(
           JSON.stringify({ error: `Unknown email type: ${type}` }),
