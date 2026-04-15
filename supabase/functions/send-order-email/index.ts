@@ -6,7 +6,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const FROM_EMAIL = "team@porcivoir.com"; // Correspondance avec vos réglages Supabase
+const FROM_EMAIL = "onboading@resend.dev"; // Correspondance avec vos réglages Supabase
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -267,7 +267,7 @@ serve(async (req) => {
         break;
       case "password_reset": {
         subject = `🔑 Réinitialisation de votre mot de passe – Porc'Ivoire`;
-        
+
         // Use Supabase Admin to generate a single-use recovery link
         const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
           type: 'recovery',
@@ -277,8 +277,17 @@ serve(async (req) => {
           }
         });
 
-        if (linkError) throw linkError;
-        
+        if (linkError) {
+          // Si l'utilisateur n'est pas trouvé, on retourne un succès silencieux
+          // pour des raisons de sécurité (évite l'énumération d'utilisateurs)
+          if (linkError.status === 404 || linkError.message.includes('not found')) {
+            return new Response(JSON.stringify({ success: true, message: "Lien envoyé si l'email existe." }), {
+              headers: { "Content-Type": "application/json", ...corsHeaders },
+            });
+          }
+          throw linkError;
+        }
+
         html = getPasswordResetEmail(order || {}, linkData.properties.action_link);
         break;
       }
@@ -332,8 +341,10 @@ serve(async (req) => {
     });
 
   } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
+    // On renvoie un code 200 pour que le front-end puisse lire le message d'erreur
+    // au lieu de juste crasher avec une erreur HTTP 500 générique.
+    return new Response(JSON.stringify({ error: err.message || "Erreur interne", stack: err.stack }), {
+      status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   }

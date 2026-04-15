@@ -14,6 +14,13 @@ const ResetPassword = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Si l'URL contient un access_token (cas du clic sur le lien reçu par e-mail),
+    // Supabase va s'occuper de le valider en arrière-plan et de créer la session.
+    // On ne veut donc surtout pas rediriger immédiatement.
+    if (window.location.hash && window.location.hash.includes('access_token')) {
+      return;
+    }
+
     // Check if we have a session (Supabase adds it automatically from the URL hash)
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
