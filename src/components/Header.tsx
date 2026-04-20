@@ -9,9 +9,9 @@ import TopBar from "./TopBar";
 const navItems = [
   { label: "Accueil", href: "/" },
   { label: "Boutique", href: "/boutique" },
-  { label: "Devenir Partenaire", href: "/#partenaire" },
+  { label: "Devenir Partenaire", href: "/partenaire" },
   { label: "Actualités", href: "/blog" },
-  { label: "Contacts", href: "/#contact" },
+  { label: "Contacts", href: "/contact" },
 ];
 
 const categories = [

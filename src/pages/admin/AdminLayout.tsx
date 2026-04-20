@@ -1,16 +1,17 @@
 import { useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Package, 
-  ShoppingCart, 
-  Users, 
-  Tag, 
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  Users,
+  Tag,
   LogOut,
   Menu,
   X,
   Settings,
-  FileText
+  FileText,
+  GraduationCap
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,8 @@ const AdminLayout = () => {
     { name: 'Clients', href: '/admin/customers', icon: Users },
     { name: 'Blog', href: '/admin/blog', icon: FileText },
     { name: 'Promotions', href: '/admin/promotions', icon: Tag },
+    { name: 'Formations', href: '/admin/trainings', icon: GraduationCap },
+    { name: 'Souscriptions', href: '/admin/training-subscriptions', icon: GraduationCap },
   ];
 
   if (profile?.role === 'admin') {
@@ -47,7 +50,7 @@ const AdminLayout = () => {
     <div className="min-h-screen bg-secondary/30 flex">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-40 bg-black/50 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
@@ -55,15 +58,14 @@ const AdminLayout = () => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:w-64 flex flex-col ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:w-64 flex flex-col ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
       >
         <div className="h-16 flex items-center justify-between px-4 border-b border-border">
           <Link to="/" className="flex items-center gap-2">
             <img src={logo} alt="Porcivoir" className="h-10 w-auto object-contain" />
           </Link>
-          <button 
+          <button
             onClick={() => setSidebarOpen(false)}
             className="lg:hidden p-2 text-muted-foreground hover:text-foreground"
           >
@@ -79,11 +81,10 @@ const AdminLayout = () => {
               <Link
                 key={item.name}
                 to={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-sans text-sm font-medium transition-colors ${
-                  active 
-                    ? 'bg-primary/10 text-primary' 
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-sans text-sm font-medium transition-colors ${active
+                    ? 'bg-primary/10 text-primary'
                     : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
-                }`}
+                  }`}
                 onClick={() => setSidebarOpen(false)}
               >
                 <Icon className={`w-5 h-5 ${active ? 'text-primary' : 'text-muted-foreground'}`} />
@@ -103,8 +104,8 @@ const AdminLayout = () => {
               <p className="text-xs text-muted-foreground capitalize">{profile?.role}</p>
             </div>
           </div>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 border-none shadow-none"
             onClick={signOut}
           >
@@ -124,7 +125,7 @@ const AdminLayout = () => {
           >
             <Menu className="w-6 h-6" />
           </button>
-          
+
           <div className="flex-1 px-4 flex justify-end">
             <div className="flex items-center gap-4">
               <Button variant="outline" size="sm" asChild>
