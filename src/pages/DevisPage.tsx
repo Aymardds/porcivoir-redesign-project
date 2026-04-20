@@ -76,12 +76,16 @@ export default function DevisPage() {
                         personnalisée élaborée par nos experts en 48h.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                        <Link
-                            to="/contact"
+                        <a
+                            href="#services"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' });
+                            }}
                             className="inline-flex items-center gap-2 bg-yellow-400 text-black font-black px-8 py-4 rounded-xl text-base hover:bg-yellow-300 transition-all shadow-xl hover:-translate-y-0.5"
                         >
                             Demander mon devis <ArrowRight className="w-5 h-5" />
-                        </Link>
+                        </a>
                         <a
                             href="#services"
                             className="inline-flex items-center gap-2 bg-white/15 border border-white/25 text-white font-bold px-8 py-4 rounded-xl text-base hover:bg-white/25 transition-all"
@@ -192,12 +196,16 @@ export default function DevisPage() {
                     <p className="text-white/80 max-w-xl mx-auto mb-8 text-lg">
                         Remplissez notre formulaire en ligne et recevez une offre personnalisée dans les 48h.
                     </p>
-                    <Link
-                        to="/contact"
+                    <a
+                        href="#services"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' });
+                        }}
                         className="inline-flex items-center gap-2 bg-yellow-400 text-black font-black px-8 py-4 rounded-xl text-base hover:bg-yellow-300 transition-all shadow-xl hover:-translate-y-0.5"
                     >
                         Demander mon devis maintenant <ArrowRight className="w-5 h-5" />
-                    </Link>
+                    </a>
                 </div>
             </section>
 
