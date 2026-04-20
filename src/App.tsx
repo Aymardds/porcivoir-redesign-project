@@ -12,7 +12,6 @@ import OrderSuccess from "./pages/OrderSuccess.tsx";
 import ProductDetail from "./pages/ProductDetail.tsx";
 import Blog from "./pages/Blog.tsx";
 import BlogPost from "./pages/BlogPost.tsx";
-import QuoteRequest from "./pages/QuoteRequest.tsx";
 import Trainings from "./pages/Trainings.tsx";
 import TrainingDetail from "./pages/TrainingDetail.tsx";
 import DevisPage from "./pages/DevisPage.tsx";
@@ -129,9 +128,6 @@ const App = () => (
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/mon-compte" element={<CustomerDashboard />} />
-
-                {/* old quote route for main site if they want to keep it or hide it, let's keep it */}
-                <Route path="/quote" element={<QuoteRequest />} />
 
                 {/* Formations Module Public Routes */}
                 <Route path="/formations" element={<Trainings />} />

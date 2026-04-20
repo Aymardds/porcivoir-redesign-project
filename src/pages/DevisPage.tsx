@@ -77,7 +77,7 @@ export default function DevisPage() {
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <Link
-                            to="/quote"
+                            to="/contact"
                             className="inline-flex items-center gap-2 bg-yellow-400 text-black font-black px-8 py-4 rounded-xl text-base hover:bg-yellow-300 transition-all shadow-xl hover:-translate-y-0.5"
                         >
                             Demander mon devis <ArrowRight className="w-5 h-5" />
@@ -129,7 +129,7 @@ export default function DevisPage() {
                                             Générer le devis <ArrowRight className="w-4 h-4 ml-1" />
                                         </Link>
                                     ) : (
-                                        <Link to="/quote" className="inline-flex items-center text-sm font-bold text-muted-foreground hover:text-primary transition-colors mt-auto">
+                                        <Link to="/contact" className="inline-flex items-center text-sm font-bold text-muted-foreground hover:text-primary transition-colors mt-auto">
                                             Faire une demande <ArrowRight className="w-4 h-4 ml-1" />
                                         </Link>
                                     )}
@@ -193,7 +193,7 @@ export default function DevisPage() {
                         Remplissez notre formulaire en ligne et recevez une offre personnalisée dans les 48h.
                     </p>
                     <Link
-                        to="/quote"
+                        to="/contact"
                         className="inline-flex items-center gap-2 bg-yellow-400 text-black font-black px-8 py-4 rounded-xl text-base hover:bg-yellow-300 transition-all shadow-xl hover:-translate-y-0.5"
                     >
                         Demander mon devis maintenant <ArrowRight className="w-5 h-5" />
