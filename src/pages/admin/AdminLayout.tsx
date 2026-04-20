@@ -11,7 +11,8 @@ import {
   X,
   Settings,
   FileText,
-  GraduationCap
+  GraduationCap,
+  Calculator
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,7 @@ const AdminLayout = () => {
     { name: 'Catégories', href: '/admin/categories', icon: Tag },
     { name: 'Clients', href: '/admin/customers', icon: Users },
     { name: 'Blog', href: '/admin/blog', icon: FileText },
+    { name: 'Modèles Devis', href: '/admin/instant-quotes', icon: Calculator },
     { name: 'Promotions', href: '/admin/promotions', icon: Tag },
     { name: 'Formations', href: '/admin/trainings', icon: GraduationCap },
     { name: 'Souscriptions', href: '/admin/training-subscriptions', icon: GraduationCap },

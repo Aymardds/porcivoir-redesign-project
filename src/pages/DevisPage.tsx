@@ -8,9 +8,11 @@ import Footer from "@/components/Footer";
 
 const services = [
     {
+        id: "infrastructures",
         icon: Wrench,
-        title: "Aménagement agro-pastoral",
-        description: "Conception et réalisation d'espaces d'élevage optimisés : porcheries, enclos, systèmes d'alimentation automatisés.",
+        title: "Infrastructures et Équipements",
+        description: "Devis instantané pour la conception et réalisation d'espaces d'élevage : porcheries, enclos, équipements.",
+        link: "/devis/generateur/bbbbbbbb-8888-4444-aaaa-111111111111"
     },
     {
         icon: Layers,
@@ -115,12 +117,22 @@ export default function DevisPage() {
                         {services.map((s) => {
                             const Icon = s.icon;
                             return (
-                                <div key={s.title} className="bg-card border border-border rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow group">
+                                <div key={s.title} className="bg-card border border-border rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col items-start">
                                     <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
                                         <Icon className="w-6 h-6 text-primary" />
                                     </div>
                                     <h3 className="font-bold text-foreground mb-2">{s.title}</h3>
-                                    <p className="text-sm text-muted-foreground leading-relaxed">{s.description}</p>
+                                    <p className="text-sm text-muted-foreground leading-relaxed flex-1 mb-4">{s.description}</p>
+                                    
+                                    {s.link ? (
+                                        <Link to={s.link} className="inline-flex items-center text-sm font-bold text-primary hover:underline mt-auto">
+                                            Générer le devis <ArrowRight className="w-4 h-4 ml-1" />
+                                        </Link>
+                                    ) : (
+                                        <Link to="/quote" className="inline-flex items-center text-sm font-bold text-muted-foreground hover:text-primary transition-colors mt-auto">
+                                            Faire une demande <ArrowRight className="w-4 h-4 ml-1" />
+                                        </Link>
+                                    )}
                                 </div>
                             );
                         })}

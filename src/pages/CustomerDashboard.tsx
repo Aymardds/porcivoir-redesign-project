@@ -52,6 +52,7 @@ export default function CustomerDashboard() {
   const [loadingOrders, setLoadingOrders] = useState(true);
 
   const [quotes, setQuotes] = useState<any[]>([]);
+  const [instantQuotes, setInstantQuotes] = useState<any[]>([]);
   const [loadingQuotes, setLoadingQuotes] = useState(true);
 
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
@@ -79,13 +80,23 @@ export default function CustomerDashboard() {
 
   const fetchQuotes = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: qData, error: qError } = await supabase
         .from("quote_requests")
         .select(`*, quote_items(*, services(*))`)
         .eq("client_email", user?.email)
         .order("created_at", { ascending: false });
-      if (error) throw error;
-      setQuotes(data || []);
+      if (qError) throw qError;
+      setQuotes(qData || []);
+
+      const { data: iqData, error: iqError } = await supabase
+        .from("instant_quotes")
+        .select(`*, quote_templates(name)`)
+        .eq("user_id", user?.id)
+        .eq("payment_status", "paid")
+        .order("created_at", { ascending: false });
+      if (iqError) throw iqError;
+      setInstantQuotes(iqData || []);
+      
     } catch { /* silent */ }
     finally { setLoadingQuotes(false); }
   };
@@ -141,7 +152,7 @@ export default function CustomerDashboard() {
                   <p className="text-[11px] text-white/70 font-semibold">Commandes</p>
                 </div>
                 <div className="text-center bg-white/15 rounded-xl px-4 py-3">
-                  <p className="text-xl font-black">{quotes.length}</p>
+                  <p className="text-xl font-black">{quotes.length + instantQuotes.length}</p>
                   <p className="text-[11px] text-white/70 font-semibold">Devis</p>
                 </div>
                 <div className="text-center bg-white/15 rounded-xl px-4 py-3">
@@ -233,53 +244,86 @@ export default function CustomerDashboard() {
                   title="Mes Demandes de Devis"
                   icon={FileText}
                   loading={loadingQuotes}
-                  empty={quotes.length === 0}
+                  empty={quotes.length === 0 && instantQuotes.length === 0}
                   emptyIcon={FileText}
                   emptyText="Vous n'avez encore soumis aucune demande de devis."
                   emptyAction={{ label: "Demander un devis", to: "/devis" }}
                 >
-                  <div className="space-y-3">
-                    {quotes.map((q) => (
-                      <div key={q.id} className="border border-border rounded-xl p-5 bg-secondary/5 hover:bg-secondary/15 transition-colors">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
-                          <div>
-                            <p className="font-black font-sans text-foreground">
-                              Devis #{q.id.slice(0, 8).toUpperCase()}
-                            </p>
-                            <p className="text-xs text-muted-foreground font-medium flex items-center gap-1 mt-0.5">
-                              <CalendarDays className="w-3 h-3" />
-                              {format(new Date(q.created_at), "d MMMM yyyy", { locale: fr })}
-                            </p>
+                  <div className="space-y-4">
+                    {/* Instant Quotes */}
+                    {instantQuotes.length > 0 && (
+                      <div className="space-y-3">
+                        <h4 className="text-xs font-black uppercase text-muted-foreground mb-2">Devis Instantanés</h4>
+                        {instantQuotes.map((q) => (
+                          <div key={q.id} className="border-l-4 border-l-primary border-y border-y-border border-r border-r-border rounded-xl p-5 bg-secondary/5 hover:bg-secondary/15 transition-colors">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                              <div>
+                                <p className="font-black font-sans text-foreground">
+                                  {q.quote_templates?.name || "Modèle"} - {q.input_quantity} m²
+                                </p>
+                                <p className="text-xs text-muted-foreground font-medium flex items-center gap-1 mt-0.5">
+                                  <CalendarDays className="w-3 h-3" />
+                                  Généré le {format(new Date(q.created_at), "d MMMM yyyy", { locale: fr })}
+                                </p>
+                              </div>
+                              <div className="flex flex-col items-start sm:items-end gap-1">
+                                <Link to={`/mes-devis/resultat/${q.id}`} className="text-[11px] font-black uppercase px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors">
+                                  Voir PDF Détaillé
+                                </Link>
+                              </div>
+                            </div>
+                            <div className="mt-3 pt-3 border-t border-border flex justify-between items-center">
+                              <p className="text-xs text-muted-foreground font-semibold">Total Estimatif TTC</p>
+                              <p className="font-black text-foreground">{q.total_ttc?.toLocaleString("fr-FR")} FCFA</p>
+                            </div>
                           </div>
-                          <div className="flex flex-col items-start sm:items-end gap-1">
-                            <span className={`text-[11px] font-black uppercase px-2.5 py-1 rounded-full ${quoteStatusMap[q.status]?.color || "bg-gray-100 text-gray-600"}`}>
-                              {quoteStatusMap[q.status]?.label || q.status || "Soumis"}
-                            </span>
-                            <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${q.payment_status === "paid" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
-                              Paiement : {q.payment_status === "paid" ? "Effectué" : "En attente"}
-                            </span>
-                          </div>
-                        </div>
-                        {q.client_location && (
-                          <p className="text-xs text-muted-foreground flex items-center gap-1 mb-2">
-                            <MapPin className="w-3 h-3 text-primary/70" /> {q.client_location}
-                          </p>
-                        )}
-                        {q.quote_items && q.quote_items.length > 0 && (
-                          <div className="flex flex-wrap gap-1.5 mt-2">
-                            {q.quote_items.map((item: any) => (
-                              <span key={item.id} className="bg-primary/10 text-primary text-[11px] font-bold px-2 py-0.5 rounded-full">
-                                {item.services?.name || "Service"}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                        <div className="mt-3 pt-3 border-t border-border flex justify-between items-center">
-                          <p className="text-xs text-muted-foreground font-semibold">Montant estimé</p>
-                          <p className="font-black text-primary">{q.total_amount?.toLocaleString("fr-FR")} FCFA</p>
-                        </div>
+                        ))}
                       </div>
-                    ))}
+                    )}
+
+                    {/* Manual Quotes */}
+                    {quotes.length > 0 && (
+                      <div className="space-y-3 mt-6">
+                        <h4 className="text-xs font-black uppercase text-muted-foreground mb-2">Demandes de Devis (Sur-mesure)</h4>
+                        {quotes.map((q) => (
+                          <div key={q.id} className="border border-border rounded-xl p-5 bg-secondary/5 hover:bg-secondary/15 transition-colors">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                              <div>
+                                <p className="font-black font-sans text-foreground">
+                                  Requête #{q.id.slice(0, 8).toUpperCase()}
+                                </p>
+                                <p className="text-xs text-muted-foreground font-medium flex items-center gap-1 mt-0.5">
+                                  <CalendarDays className="w-3 h-3" />
+                                  {format(new Date(q.created_at), "d MMMM yyyy", { locale: fr })}
+                                </p>
+                              </div>
+                              <div className="flex flex-col items-start sm:items-end gap-1">
+                                <span className={`text-[11px] font-black uppercase px-2.5 py-1 rounded-full ${quoteStatusMap[q.status]?.color || "bg-gray-100 text-gray-600"}`}>
+                                  {quoteStatusMap[q.status]?.label || q.status || "Soumis"}
+                                </span>
+                                <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${q.payment_status === "paid" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
+                                  Paiement Frais : {q.payment_status === "paid" ? "Effectué" : "En attente"}
+                                </span>
+                              </div>
+                            </div>
+                            {q.quote_items && q.quote_items.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5 mt-2 mb-3">
+                                {q.quote_items.map((item: any) => (
+                                  <span key={item.id} className="bg-primary/10 text-primary text-[11px] font-bold px-2 py-0.5 rounded-full">
+                                    {item.services?.name || "Service"}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            <div className="mt-3 pt-3 border-t border-border flex justify-between items-center">
+                              <p className="text-xs text-muted-foreground font-semibold">Validation Finale</p>
+                              <p className="font-black text-muted-foreground">En cours d'étude par l'équipe</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                   </div>
                 </ServicePanel>
               )}

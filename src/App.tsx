@@ -19,6 +19,8 @@ import DevisPage from "./pages/DevisPage.tsx";
 import TroupeauPage from "./pages/TroupeauPage.tsx";
 import ContactPage from "./pages/ContactPage.tsx";
 import PartnerPage from "./pages/PartnerPage.tsx";
+import InstantQuoteGenerator from "./pages/InstantQuoteGenerator.tsx";
+import InstantQuoteView from "./pages/InstantQuoteView.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 import { AuthProvider } from "@/context/AuthContext";
@@ -43,6 +45,7 @@ import ServicesManagement from "./pages/admin/ServicesManagement.tsx";
 import SettingsManagement from "./pages/admin/SettingsManagement.tsx";
 import TrainingsManagement from "./pages/admin/TrainingsManagement.tsx";
 import TrainingSubscriptions from "./pages/admin/TrainingSubscriptions.tsx";
+import InstantQuotesManagement from "./pages/admin/InstantQuotesManagement.tsx";
 
 // Devis Module Imports
 import HomeDevis from "@/modules/quote-hub/pages/Home.tsx";
@@ -82,6 +85,7 @@ const App = () => (
                 <Route path="services" element={<ServicesManagement />} />
                 <Route path="trainings" element={<TrainingsManagement />} />
                 <Route path="training-subscriptions" element={<TrainingSubscriptions />} />
+                <Route path="instant-quotes" element={<InstantQuotesManagement />} />
                 <Route path="*" element={<Dashboard />} />
               </Route>
             </Route>
@@ -135,6 +139,8 @@ const App = () => (
 
                 {/* Service Landing Pages */}
                 <Route path="/devis" element={<DevisPage />} />
+                <Route path="/devis/generateur/:templateId" element={<InstantQuoteGenerator />} />
+                <Route path="/mes-devis/resultat/:id" element={<InstantQuoteView />} />
                 <Route path="/troupeau" element={<TroupeauPage />} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/partenaire" element={<PartnerPage />} />
