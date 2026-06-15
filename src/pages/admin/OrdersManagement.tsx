@@ -134,9 +134,9 @@ export default function OrdersManagement() {
 
 
 
-  const handleDownloadInvoice = (order: any) => {
+  const handleDownloadInvoice = async (order: any) => {
     try {
-      const pdfBase64 = generateInvoicePdf({
+      const pdfBase64 = await generateInvoicePdf({
         id: order.id,
         customer_name: order.customer_name || 'Client',
         customer_phone: order.customer_phone,
@@ -172,7 +172,7 @@ export default function OrdersManagement() {
       const order = invoiceModal.order;
 
       // Generate PDF
-      const pdfBase64 = generateInvoicePdf({
+      const pdfBase64 = await generateInvoicePdf({
         id: order.id,
         customer_name: order.customer_name || 'Client',
         customer_phone: order.customer_phone,

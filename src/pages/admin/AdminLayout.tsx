@@ -23,23 +23,35 @@ const AdminLayout = () => {
   const location = useLocation();
   const { signOut, profile } = useAuth();
 
-  const navigation = [
-    { name: 'Tableau de bord', href: '/admin', icon: LayoutDashboard },
-    { name: 'Commandes', href: '/admin/orders', icon: ShoppingCart },
-    { name: 'Inventaire', href: '/admin/inventory', icon: Package },
-    { name: 'Catégories', href: '/admin/categories', icon: Tag },
-    { name: 'Clients', href: '/admin/customers', icon: Users },
-    { name: 'Blog', href: '/admin/blog', icon: FileText },
-    { name: 'Modèles Devis', href: '/admin/instant-quotes', icon: Calculator },
-    { name: 'Promotions', href: '/admin/promotions', icon: Tag },
-    { name: 'Formations', href: '/admin/trainings', icon: GraduationCap },
-    { name: 'Souscriptions', href: '/admin/training-subscriptions', icon: GraduationCap },
+  const getRoleLabel = (role?: string) => {
+    switch (role) {
+      case 'admin': return 'Administrateur';
+      case 'stock_manager': return 'Gestionnaire Stock';
+      case 'editor': return 'Rédacteur';
+      case 'seo': return 'Responsable SEO';
+      case 'customer': return 'Client';
+      default: return role || '';
+    }
+  };
+
+  const fullNavigation = [
+    { name: 'Tableau de bord', href: '/admin', icon: LayoutDashboard, roles: ['admin', 'editor', 'seo', 'stock_manager'] },
+    { name: 'Commandes', href: '/admin/orders', icon: ShoppingCart, roles: ['admin', 'stock_manager'] },
+    { name: 'Inventaire', href: '/admin/inventory', icon: Package, roles: ['admin', 'stock_manager'] },
+    { name: 'Catégories', href: '/admin/categories', icon: Tag, roles: ['admin', 'stock_manager'] },
+    { name: 'Clients', href: '/admin/customers', icon: Users, roles: ['admin'] },
+    { name: 'Blog', href: '/admin/blog', icon: FileText, roles: ['admin', 'editor', 'seo'] },
+    { name: 'Modèles Devis', href: '/admin/instant-quotes', icon: Calculator, roles: ['admin'] },
+    { name: 'Promotions', href: '/admin/promotions', icon: Tag, roles: ['admin'] },
+    { name: 'Formations', href: '/admin/trainings', icon: GraduationCap, roles: ['admin'] },
+    { name: 'Souscriptions', href: '/admin/training-subscriptions', icon: GraduationCap, roles: ['admin'] },
+    { name: 'Équipe', href: '/admin/team', icon: Users, roles: ['admin'] },
+    { name: 'Paramètres', href: '/admin/settings', icon: Settings, roles: ['admin'] },
   ];
 
-  if (profile?.role === 'admin') {
-    navigation.push({ name: 'Équipe', href: '/admin/team', icon: Users });
-    navigation.push({ name: 'Paramètres', href: '/admin/settings', icon: Settings });
-  }
+  const navigation = fullNavigation.filter(item => 
+    profile?.role && item.roles.includes(profile.role)
+  );
 
   const isActive = (path: string) => {
     if (path === '/admin') {
@@ -103,7 +115,7 @@ const AdminLayout = () => {
             </div>
             <div className="overflow-hidden">
               <p className="text-sm font-bold truncate">{profile?.first_name} {profile?.last_name}</p>
-              <p className="text-xs text-muted-foreground capitalize">{profile?.role}</p>
+              <p className="text-xs text-muted-foreground">{getRoleLabel(profile?.role)}</p>
             </div>
           </div>
           <Button

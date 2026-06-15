@@ -9,6 +9,7 @@ import Index from "./pages/Index.tsx";
 import Shop from "./pages/Shop.tsx";
 import Checkout from "./pages/Checkout.tsx";
 import OrderSuccess from "./pages/OrderSuccess.tsx";
+import FactureDetail from "./pages/FactureDetail.tsx";
 import ProductDetail from "./pages/ProductDetail.tsx";
 import Blog from "./pages/Blog.tsx";
 import BlogPost from "./pages/BlogPost.tsx";
@@ -67,24 +68,34 @@ const App = () => (
             <Route element={<ProtectedRoute allowedRoles={['admin', 'editor', 'seo', 'stock_manager']} />}>
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<Dashboard />} />
-                <Route path="inventory" element={<InventoryManagement />} />
-                <Route path="categories" element={<CategoriesManagement />} />
-                <Route path="orders" element={<OrdersManagement />} />
-                <Route path="customers" element={<CustomersManagement />} />
-                <Route path="promotions" element={<PromotionsManagement />} />
-                {/* Admin-only: system settings & user management */}
+                
+                {/* Stock Manager & Admin: inventory, categories, orders */}
+                <Route element={<ProtectedRoute allowedRoles={['admin', 'stock_manager']} />}>
+                  <Route path="inventory" element={<InventoryManagement />} />
+                  <Route path="categories" element={<CategoriesManagement />} />
+                  <Route path="orders" element={<OrdersManagement />} />
+                </Route>
+
+                {/* Editor, SEO & Admin: blog */}
+                <Route element={<ProtectedRoute allowedRoles={['admin', 'editor', 'seo']} />}>
+                  <Route path="blog" element={<BlogManagement />} />
+                  <Route path="blog/new" element={<BlogEditor />} />
+                  <Route path="blog/edit/:id" element={<BlogEditor />} />
+                </Route>
+
+                {/* Admin-only: system settings, user management, customers, promotions, quotes, trainings, etc. */}
                 <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+                  <Route path="customers" element={<CustomersManagement />} />
+                  <Route path="promotions" element={<PromotionsManagement />} />
                   <Route path="settings" element={<SettingsManagement />} />
                   <Route path="team" element={<UsersManagement />} />
+                  <Route path="quotes" element={<QuotesManagement />} />
+                  <Route path="services" element={<ServicesManagement />} />
+                  <Route path="trainings" element={<TrainingsManagement />} />
+                  <Route path="training-subscriptions" element={<TrainingSubscriptions />} />
+                  <Route path="instant-quotes" element={<InstantQuotesManagement />} />
                 </Route>
-                <Route path="blog" element={<BlogManagement />} />
-                <Route path="blog/new" element={<BlogEditor />} />
-                <Route path="blog/edit/:id" element={<BlogEditor />} />
-                <Route path="quotes" element={<QuotesManagement />} />
-                <Route path="services" element={<ServicesManagement />} />
-                <Route path="trainings" element={<TrainingsManagement />} />
-                <Route path="training-subscriptions" element={<TrainingSubscriptions />} />
-                <Route path="instant-quotes" element={<InstantQuotesManagement />} />
+
                 <Route path="*" element={<Dashboard />} />
               </Route>
             </Route>
@@ -120,6 +131,7 @@ const App = () => (
                 <Route path="/boutique" element={<Shop />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/merci" element={<OrderSuccess />} />
+                <Route path="/facture/:id" element={<FactureDetail />} />
                 <Route path="/produit/:slug" element={<ProductDetail />} />
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/blog/:slug" element={<BlogPost />} />

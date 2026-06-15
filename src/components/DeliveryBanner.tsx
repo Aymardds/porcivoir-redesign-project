@@ -15,10 +15,10 @@ const DeliveryBanner = () => (
           </div>
           <div>
             <h2 className="text-2xl md:text-3xl text-white">
-              Livraison Gratuite dans Abidjan !
+              Livraison Rapide dans Abidjan !
             </h2>
             <p className="text-white/80 mt-1 font-sans text-sm md:text-base">
-              Pour toute commande à partir de <strong>25 000 CFA</strong>
+              Votre viande fraîche livrée directement chez vous.
             </p>
           </div>
         </div>

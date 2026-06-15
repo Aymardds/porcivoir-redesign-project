@@ -9,7 +9,8 @@ import {
   Loader2,
   AlertTriangle,
   Briefcase,
-  PieChart
+  PieChart,
+  Clock
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -21,6 +22,7 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/context/AuthContext';
 
 const StatCard = ({ title, value, icon: Icon, trend, loading, variant = "default" }: any) => (
   <div className={`bg-card p-6 rounded-xl border border-border shadow-sm ring-1 ring-black/5 ${variant === 'primary' ? 'border-primary/30 bg-primary/5' : ''}`}>
@@ -47,6 +49,7 @@ const StatCard = ({ title, value, icon: Icon, trend, loading, variant = "default
 );
 
 const Dashboard = () => {
+  const { profile } = useAuth();
   const [stats, setStats] = useState({
     revenueGlobal: 0,
     revenueStore: 0,
@@ -55,7 +58,12 @@ const Dashboard = () => {
     customersCount: 0,
     quotesCount: 0,
     stockAlerts: [] as any[],
-    chartData: [] as any[]
+    chartData: [] as any[],
+    totalProductsCount: 0,
+    activeProductsCount: 0,
+    totalStockVolume: 0,
+    criticalStockAlertsCount: 0,
+    pendingOrdersCount: 0
   });
   const [loading, setLoading] = useState(true);
 
@@ -66,14 +74,15 @@ const Dashboard = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      // 1. Fetch Orders (Store Revenue)
+      // 1. Fetch Orders (Store Revenue and Status)
       const { data: orders } = await supabase
         .from('orders')
-        .select('total_amount, created_at')
+        .select('status, total_amount, created_at')
         .neq('status', 'cancelled');
       
       const ordersRevenue = orders?.reduce((acc, curr) => acc + Number(curr.total_amount), 0) || 0;
       const ordersCount = orders?.length || 0;
+      const pendingOrdersCount = orders?.filter(o => o.status === 'pending' || o.status === 'processing').length || 0;
 
       // 2. Fetch Quotes (Services Revenue - 15% fixed rate)
       const { data: quotes } = await supabase
@@ -90,7 +99,17 @@ const Dashboard = () => {
         .from('profiles')
         .select('*', { count: 'exact', head: true });
 
-      // 4. Fetch Stock Alerts (Stock < 6)
+      // 4. Fetch Products for stock details
+      const { data: allProducts } = await supabase
+        .from('products')
+        .select('stock_quantity, is_active');
+
+      const totalProductsCount = allProducts?.length || 0;
+      const activeProductsCount = allProducts?.filter(p => p.is_active).length || 0;
+      const totalStockVolume = allProducts?.reduce((acc, p) => acc + (p.stock_quantity || 0), 0) || 0;
+      const criticalStockAlertsCount = allProducts?.filter(p => p.stock_quantity < 3).length || 0;
+
+      // 5. Fetch Stock Alerts (Stock < 10) for widget
       const { data: stockAlerts } = await supabase
         .from('products')
         .select('title, stock_quantity')
@@ -98,7 +117,7 @@ const Dashboard = () => {
         .order('stock_quantity', { ascending: true })
         .limit(5);
 
-      // 5. Generate Chart Data (Last 7 days)
+      // 6. Generate Chart Data (Last 7 days)
       const last7Days = [...Array(7)].map((_, i) => {
         const d = new Date();
         d.setDate(d.getDate() - (6 - i));
@@ -126,7 +145,12 @@ const Dashboard = () => {
         customersCount: customersCount || 0,
         quotesCount,
         stockAlerts: stockAlerts || [],
-        chartData: last7Days
+        chartData: last7Days,
+        totalProductsCount,
+        activeProductsCount,
+        totalStockVolume,
+        criticalStockAlertsCount,
+        pendingOrdersCount
       });
 
     } catch (error) {
@@ -144,151 +168,289 @@ const Dashboard = () => {
     }).format(amount);
   };
 
+  const isStockManager = profile?.role === 'stock_manager';
+
   return (
     <div className="space-y-8 animate-fade-in pb-12">
       <div className="flex justify-between items-end border-b border-border/50 pb-6 mb-8">
         <div>
           <h1 className="text-3xl font-black font-sans text-foreground uppercase tracking-tight">Tableau de Bord</h1>
           <p className="text-muted-foreground mt-1 font-medium flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-primary" /> Performance globale du département Porcivoire
+            <TrendingUp className="w-4 h-4 text-primary" /> 
+            {isStockManager 
+              ? "Gestion des stocks, approvisionnements et commandes de Porc'Ivoire" 
+              : "Performance globale du département Porcivoire"}
           </p>
         </div>
         <button 
           onClick={fetchDashboardData}
           className="px-4 py-2 bg-secondary/50 rounded-lg text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:bg-secondary transition-all"
         >
-          {loading ? 'Sychronisation...' : 'Actualiser les Stats'}
+          {loading ? 'Synchronisation...' : 'Actualiser les Stats'}
         </button>
       </div>
 
-      {/* --- SECTION REVENUS --- */}
-      <div className="space-y-4">
-        <h2 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Analyses Financières</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <StatCard 
-                title="Chiffre d'Affaire Global" 
-                value={formatCurrency(stats.revenueGlobal)} 
-                icon={PieChart} 
-                loading={loading}
-                variant="primary"
-            />
-            <StatCard 
-                title="Ventes de Porc (Store)" 
-                value={formatCurrency(stats.revenueStore)} 
-                icon={CreditCard} 
-                loading={loading}
-            />
-            <StatCard 
-                title="Services Agri (Commissions)" 
-                value={formatCurrency(stats.revenueServices)} 
-                icon={Briefcase} 
-                loading={loading}
-            />
+      {isStockManager ? (
+        /* --- STOCK MANAGER METRICS --- */
+        <div className="space-y-4">
+          <h2 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Analyses des Stocks & Volumes</h2>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <StatCard 
+                  title="Volume de Stock" 
+                  value={`${stats.totalStockVolume} kg / pcs`} 
+                  icon={Package} 
+                  loading={loading}
+                  variant="primary"
+              />
+              <StatCard 
+                  title="Alertes Critiques (< 3)" 
+                  value={stats.criticalStockAlertsCount} 
+                  icon={AlertTriangle} 
+                  loading={loading}
+              />
+              <StatCard 
+                  title="Commandes à Traiter" 
+                  value={stats.pendingOrdersCount} 
+                  icon={Clock} 
+                  loading={loading}
+              />
+              <StatCard 
+                  title="Catalogue Produits" 
+                  value={`${stats.activeProductsCount} / ${stats.totalProductsCount}`} 
+                  icon={ShoppingCart} 
+                  loading={loading}
+              />
+          </div>
         </div>
-      </div>
-
-      {/* --- SECTION ACTIVITÉ --- */}
-      <div className="space-y-4 mt-12">
-        <h2 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Volume d'Activité</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <StatCard 
-                title="Commandes Boutique" 
-                value={stats.ordersCount} 
-                icon={ShoppingCart} 
-                loading={loading}
-            />
-            <StatCard 
-                title="Demandes Devis" 
-                value={stats.quotesCount} 
-                icon={FileText} 
-                loading={loading}
-            />
-            <StatCard 
-                title="Base Clients" 
-                value={stats.customersCount} 
-                icon={Users} 
-                loading={loading}
-            />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-12">
-        <div className="lg:col-span-2 bg-card border border-border shadow-sm rounded-2xl p-8 ring-1 ring-black/5">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-xl font-black font-sans uppercase tracking-tight">Historique Boutique (7J)</h2>
-            <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 text-[10px] font-black uppercase text-muted-foreground">
-                    <div className="w-2.5 h-2.5 bg-primary rounded-full"></div>
-                    Boutique
-                </div>
+      ) : (
+        /* --- ADMIN FINANCIAL METRICS --- */
+        <>
+          <div className="space-y-4">
+            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Analyses Financières</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <StatCard 
+                    title="Chiffre d'Affaire Global" 
+                    value={formatCurrency(stats.revenueGlobal)} 
+                    icon={PieChart} 
+                    loading={loading}
+                    variant="primary"
+                />
+                <StatCard 
+                    title="Ventes de Porc (Store)" 
+                    value={formatCurrency(stats.revenueStore)} 
+                    icon={CreditCard} 
+                    loading={loading}
+                />
+                <StatCard 
+                    title="Services Agri (Commissions)" 
+                    value={formatCurrency(stats.revenueServices)} 
+                    icon={Briefcase} 
+                    loading={loading}
+                />
             </div>
           </div>
-          <div className="h-[350px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={stats.chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                <XAxis 
-                  dataKey="name" 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 11, fill: '#6b7280', fontWeight: 800 }}
-                  dy={10}
-                />
-                <YAxis 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 11, fill: '#6b7280', fontWeight: 800 }}
-                  tickFormatter={(val) => `${val/1000}k`}
-                />
-                <Tooltip 
-                  cursor={{ fill: 'hsl(var(--secondary) / 0.5)' }}
-                  contentStyle={{ 
-                    borderRadius: '16px', 
-                    border: '1px solid hsl(var(--border))', 
-                    boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
-                    padding: '12px'
-                  }}
-                  itemStyle={{ fontSize: '12px', fontWeight: 'bold', textTransform: 'capitalize' }}
-                  formatter={(value: number) => [formatCurrency(value), 'Revenu']}
-                />
-                <Bar dataKey="boutique" fill="hsl(156 100% 31%)" radius={[6, 6, 0, 0]} barSize={40} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
 
-        <div className="bg-card border border-border shadow-sm rounded-2xl p-8 ring-1 ring-black/5">
-          <div className="flex items-center gap-2 mb-6">
-            <AlertTriangle className="w-5 h-5 text-orange-500" />
-            <h2 className="text-xl font-black font-sans uppercase tracking-tight text-foreground">Alertes Stock</h2>
+          <div className="space-y-4 mt-12">
+            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Volume d'Activité</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <StatCard 
+                    title="Commandes Boutique" 
+                    value={stats.ordersCount} 
+                    icon={ShoppingCart} 
+                    loading={loading}
+                />
+                <StatCard 
+                    title="Demandes Devis" 
+                    value={stats.quotesCount} 
+                    icon={FileText} 
+                    loading={loading}
+                />
+                <StatCard 
+                    title="Base Clients" 
+                    value={stats.customersCount} 
+                    icon={Users} 
+                    loading={loading}
+                />
+            </div>
           </div>
-          <div className="space-y-4">
-            {stats.stockAlerts.length === 0 && !loading ? (
-                <div className="py-12 text-center">
-                    <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <CheckCircle2 className="w-8 h-8 text-emerald-500" />
-                    </div>
-                    <p className="text-xs font-black uppercase text-slate-400">Opérations fluides</p>
-                    <p className="text-[11px] font-medium text-muted-foreground mt-1 px-4">Tous vos produits sont correctement approvisionnés.</p>
+        </>
+      )}
+
+      {isStockManager ? (
+        /* --- STOCK MANAGER WIDGETS --- */
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-12">
+          <div className="lg:col-span-2 bg-card border border-border shadow-sm rounded-2xl p-8 ring-1 ring-black/5 flex flex-col justify-between">
+            <div>
+              <h2 className="text-xl font-black font-sans uppercase tracking-tight mb-2">Actions Rapides</h2>
+              <p className="text-muted-foreground text-sm font-sans mb-6">Accédez rapidement aux outils de gestion du catalogue et de suivi des stocks de Porc'Ivoire.</p>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <a href="/admin/inventory" className="p-4 rounded-xl border border-border bg-secondary/20 hover:bg-secondary/40 transition-colors flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                    <Package className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-sm">Gestion de l'Inventaire</p>
+                    <p className="text-xs text-muted-foreground">Mettre à jour les stocks et prix</p>
+                  </div>
+                </a>
+                
+                <a href="/admin/categories" className="p-4 rounded-xl border border-border bg-secondary/20 hover:bg-secondary/40 transition-colors flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                    <Briefcase className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-sm">Catégories de Produits</p>
+                    <p className="text-xs text-muted-foreground">Créer et modifier des catégories</p>
+                  </div>
+                </a>
+
+                <a href="/admin/orders" className="p-4 rounded-xl border border-border bg-secondary/20 hover:bg-secondary/40 transition-colors flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                    <Clock className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-sm">Suivi des Commandes</p>
+                    <p className="text-xs text-muted-foreground">Préparer et expédier les commandes</p>
+                  </div>
+                </a>
+                
+                <div className="p-4 rounded-xl border border-border bg-secondary/5 flex items-center gap-3 opacity-60">
+                  <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-muted-foreground shrink-0">
+                    <Users className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-sm text-muted-foreground">Section Admin</p>
+                    <p className="text-xs text-muted-foreground">Clients et finances verrouillés</p>
+                  </div>
                 </div>
-            ) : stats.stockAlerts.map((item, i) => (
-              <div key={i} className="flex items-center justify-between pb-4 border-b border-border/50 last:border-0 hover:bg-secondary/10 transition-all p-2 rounded-lg">
-                <div className="overflow-hidden mr-4">
-                  <p className="font-bold font-sans text-sm truncate text-foreground">{item.title}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5 font-bold uppercase tracking-tight opacity-70">{item.stock_quantity} unités dispo</p>
-                </div>
-                <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${
-                  item.stock_quantity === 0 ? 'bg-destructive/10 text-destructive border border-destructive/20' :
-                  item.stock_quantity < 3 ? 'bg-orange-500/10 text-orange-500 border border-orange-200/50' :
-                  'bg-yellow-500/10 text-yellow-600 border border-yellow-200/50'
-                }`}>
-                  {item.stock_quantity === 0 ? 'Rupture' : item.stock_quantity < 3 ? 'Critique' : 'Bas'}
-                </span>
               </div>
-            ))}
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-border/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="space-y-1">
+                <p className="text-xs font-black uppercase tracking-wider text-primary">Statut du Catalogue</p>
+                <p className="text-xs text-muted-foreground font-sans">Dernière synchronisation réussie avec la base de données de Porc'Ivoire.</p>
+              </div>
+              <a href="/admin/inventory" className="inline-flex items-center justify-center px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs uppercase tracking-widest rounded-lg transition-all">
+                Ajouter un produit
+              </a>
+            </div>
+          </div>
+
+          {/* Stock Alerts Widget */}
+          <div className="bg-card border border-border shadow-sm rounded-2xl p-8 ring-1 ring-black/5">
+            <div className="flex items-center gap-2 mb-6">
+              <AlertTriangle className="w-5 h-5 text-orange-500" />
+              <h2 className="text-xl font-black font-sans uppercase tracking-tight text-foreground">Alertes Stock</h2>
+            </div>
+            <div className="space-y-4">
+              {stats.stockAlerts.length === 0 && !loading ? (
+                  <div className="py-12 text-center">
+                      <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <CheckCircle2 className="w-8 h-8 text-emerald-500" />
+                      </div>
+                      <p className="text-xs font-black uppercase text-slate-400">Opérations fluides</p>
+                      <p className="text-[11px] font-medium text-muted-foreground mt-1 px-4">Tous vos produits sont correctement approvisionnés.</p>
+                  </div>
+              ) : stats.stockAlerts.map((item, i) => (
+                <div key={i} className="flex items-center justify-between pb-4 border-b border-border/50 last:border-0 hover:bg-secondary/10 transition-all p-2 rounded-lg">
+                  <div className="overflow-hidden mr-4">
+                    <p className="font-bold font-sans text-sm truncate text-foreground">{item.title}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5 font-bold uppercase tracking-tight opacity-70">{item.stock_quantity} unités dispo</p>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                    item.stock_quantity === 0 ? 'bg-destructive/10 text-destructive border border-destructive/20' :
+                    item.stock_quantity < 3 ? 'bg-orange-500/10 text-orange-500 border border-orange-200/50' :
+                    'bg-yellow-500/10 text-yellow-600 border border-yellow-200/50'
+                  }`}>
+                    {item.stock_quantity === 0 ? 'Rupture' : item.stock_quantity < 3 ? 'Critique' : 'Bas'}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      ) : (
+        /* --- ADMIN WIDGETS (CHARTS + ALERTS) --- */
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-12">
+          <div className="lg:col-span-2 bg-card border border-border shadow-sm rounded-2xl p-8 ring-1 ring-black/5">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-xl font-black font-sans uppercase tracking-tight">Historique Boutique (7J)</h2>
+              <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2 text-[10px] font-black uppercase text-muted-foreground">
+                      <div className="w-2.5 h-2.5 bg-primary rounded-full"></div>
+                      Boutique
+                  </div>
+              </div>
+            </div>
+            <div className="h-[350px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={stats.chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                  <XAxis 
+                    dataKey="name" 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fill: '#6b7280', fontWeight: 800 }}
+                    dy={10}
+                  />
+                  <YAxis 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fill: '#6b7280', fontWeight: 800 }}
+                    tickFormatter={(val) => `${val/1000}k`}
+                  />
+                  <Tooltip 
+                    cursor={{ fill: 'hsl(var(--secondary) / 0.5)' }}
+                    contentStyle={{ 
+                      borderRadius: '16px', 
+                      border: '1px solid hsl(var(--border))', 
+                      boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
+                      padding: '12px'
+                    }}
+                    itemStyle={{ fontSize: '12px', fontWeight: 'bold', textTransform: 'capitalize' }}
+                    formatter={(value: number) => [formatCurrency(value), 'Revenu']}
+                  />
+                  <Bar dataKey="boutique" fill="hsl(156 100% 31%)" radius={[6, 6, 0, 0]} barSize={40} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="bg-card border border-border shadow-sm rounded-2xl p-8 ring-1 ring-black/5">
+            <div className="flex items-center gap-2 mb-6">
+              <AlertTriangle className="w-5 h-5 text-orange-500" />
+              <h2 className="text-xl font-black font-sans uppercase tracking-tight text-foreground">Alertes Stock</h2>
+            </div>
+            <div className="space-y-4">
+              {stats.stockAlerts.length === 0 && !loading ? (
+                  <div className="py-12 text-center">
+                      <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <CheckCircle2 className="w-8 h-8 text-emerald-500" />
+                      </div>
+                      <p className="text-xs font-black uppercase text-slate-400">Opérations fluides</p>
+                      <p className="text-[11px] font-medium text-muted-foreground mt-1 px-4">Tous vos produits sont correctement approvisionnés.</p>
+                  </div>
+              ) : stats.stockAlerts.map((item, i) => (
+                <div key={i} className="flex items-center justify-between pb-4 border-b border-border/50 last:border-0 hover:bg-secondary/10 transition-all p-2 rounded-lg">
+                  <div className="overflow-hidden mr-4">
+                    <p className="font-bold font-sans text-sm truncate text-foreground">{item.title}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5 font-bold uppercase tracking-tight opacity-70">{item.stock_quantity} unités dispo</p>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                    item.stock_quantity === 0 ? 'bg-destructive/10 text-destructive border border-destructive/20' :
+                    item.stock_quantity < 3 ? 'bg-orange-500/10 text-orange-500 border border-orange-200/50' :
+                    'bg-yellow-500/10 text-yellow-600 border border-yellow-200/50'
+                  }`}>
+                    {item.stock_quantity === 0 ? 'Rupture' : item.stock_quantity < 3 ? 'Critique' : 'Bas'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

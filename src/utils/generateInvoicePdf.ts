@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import QRCode from 'qrcode';
 import logo from '@/assets/logo-porcivoir.png';
 
 export interface InvoiceOrder {
@@ -20,7 +21,11 @@ export interface InvoiceOrder {
   }[];
 }
 
-export function generateInvoicePdf(order: InvoiceOrder): string {
+const formatPrice = (amount: number): string => {
+  return amount.toLocaleString('fr-FR').replace(/[\u202F\u00A0\s]/g, ' ') + ' FCFA';
+};
+
+export async function generateInvoicePdf(order: InvoiceOrder): Promise<string> {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const pageW = doc.internal.pageSize.getWidth();
   const primaryGreen = [0, 154, 85] as [number, number, number];
@@ -73,7 +78,18 @@ export function generateInvoicePdf(order: InvoiceOrder): string {
 
   doc.setFontSize(9);
   doc.setTextColor(100, 100, 100);
-  doc.text(`Date d'émission : ${issueDate}`, pageW - 15, 48, { align: 'right' });
+  doc.text(`Date d'émission : ${issueDate}`, pageW - 15, 42, { align: 'right' });
+
+  // Add QR Code
+  try {
+    const qrDataUrl = await QRCode.toDataURL(
+      `${window.location.origin}/facture/${order.id}`,
+      { margin: 1, width: 100 }
+    );
+    doc.addImage(qrDataUrl, 'PNG', pageW - 40, 46, 25, 25);
+  } catch (err) {
+    console.error("Erreur lors de la génération du QR code:", err);
+  }
 
   // ── Bill To ───────────────────────────────────────────────────
   doc.setFillColor(...lightGray);
@@ -92,8 +108,8 @@ export function generateInvoicePdf(order: InvoiceOrder): string {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(80, 80, 80);
-  if (order.customer_phone) doc.text(`📞 ${order.customer_phone}`, 18, 67);
-  doc.text(`📍 ${order.shipping_address}${order.shipping_area ? `, ${order.shipping_area}` : ''}`, 18, 72, {
+  if (order.customer_phone) doc.text(`Tél : ${order.customer_phone}`, 18, 67);
+  doc.text(`Adresse : ${order.shipping_address}${order.shipping_area ? `, ${order.shipping_area}` : ''}`, 18, 72, {
     maxWidth: 78,
   });
 
@@ -107,8 +123,8 @@ export function generateInvoicePdf(order: InvoiceOrder): string {
     body: order.items.map(item => [
       item.product_name,
       item.quantity.toString(),
-      `${item.unit_price.toLocaleString('fr-FR')} FCFA`,
-      `${item.total_price.toLocaleString('fr-FR')} FCFA`,
+      formatPrice(item.unit_price),
+      formatPrice(item.total_price),
     ]),
     headStyles: {
       fillColor: primaryGreen,
@@ -146,21 +162,22 @@ export function generateInvoicePdf(order: InvoiceOrder): string {
     doc.text(value, totalsX + totalsW, y, { align: 'right' });
   };
 
-  drawTotalRow('Sous-total', `${subtotal.toLocaleString('fr-FR')} FCFA`, finalY);
-  drawTotalRow('Frais de livraison', `${deliveryFee.toLocaleString('fr-FR')} FCFA`, finalY + 7);
+  drawTotalRow('Sous-total', formatPrice(subtotal), finalY);
+  const deliveryFeeText = deliveryFee === 0 ? "À la charge du client" : formatPrice(deliveryFee);
+  drawTotalRow('Frais de livraison', deliveryFeeText, finalY + 7);
 
   // Divider
   doc.setDrawColor(...primaryGreen);
   doc.setLineWidth(0.5);
-  doc.line(totalsX - 2, finalY + 10, totalsX + totalsW, finalY + 10);
+  doc.line(totalsX, finalY + 10, totalsX + totalsW, finalY + 10);
 
   doc.setFillColor(...primaryGreen);
-  doc.roundedRect(totalsX - 4, finalY + 12, totalsW + 6, 12, 2, 2, 'F');
+  doc.roundedRect(totalsX, finalY + 12, totalsW, 12, 2, 2, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
-  doc.text('TOTAL', totalsX, finalY + 20);
-  doc.text(`${order.total_amount.toLocaleString('fr-FR')} FCFA`, totalsX + totalsW, finalY + 20, { align: 'right' });
+  doc.text('TOTAL', totalsX + 3, finalY + 20);
+  doc.text(formatPrice(order.total_amount), totalsX + totalsW - 3, finalY + 20, { align: 'right' });
 
   // Payment method
   doc.setFont('helvetica', 'normal');

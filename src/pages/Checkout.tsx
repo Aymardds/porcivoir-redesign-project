@@ -15,17 +15,7 @@ import { Label } from "@/components/ui/label";
 import { generateInvoicePdf } from "@/utils/generateInvoicePdf";
 
 
-const DELIVERY_AREAS = [
-  { name: "Abidjan - Cocody", price: 2000 },
-  { name: "Abidjan - Marcory", price: 2000 },
-  { name: "Abidjan - Plateau", price: 2000 },
-  { name: "Abidjan - Treichville", price: 2000 },
-  { name: "Abidjan - Koumassi", price: 2000 },
-  { name: "Abidjan - Yopougon", price: 3000 },
-  { name: "Abidjan - Abobo", price: 3000 },
-  { name: "Bingerville", price: 3000 },
-  { name: "Grand-Bassam", price: 5000 },
-];
+
 
 export default function Checkout() {
   const { items, totalPrice, clearCart } = useCart();
@@ -39,13 +29,12 @@ export default function Checkout() {
     phone: "",
     email: "",
     address: "",
-    area: DELIVERY_AREAS[0].name,
+    area: "",
   });
 
   const [paymentMethod, setPaymentMethod] = useState<"cod" | "online">("cod");
 
-  const selectedArea = DELIVERY_AREAS.find(a => a.name === formData.area);
-  const deliveryFee = selectedArea ? selectedArea.price : 0;
+  const deliveryFee = 0;
   const finalTotal = totalPrice + deliveryFee;
 
   useEffect(() => {
@@ -179,8 +168,8 @@ export default function Checkout() {
           customer_name: `${formData.firstName} ${formData.lastName}`,
           customer_phone: formData.phone,
           shipping_address: formData.address,
-          shipping_area: formData.area,
-          delivery_fee: deliveryFee,
+          shipping_area: formData.area || undefined,
+          delivery_fee: 0,
           total_amount: finalTotal,
           payment_method: paymentMethod,
           status: "pending",
@@ -221,18 +210,41 @@ export default function Checkout() {
         }
       }
 
-      // 4. Send Invoice Email automatically
+      // 4. Send Order Confirmation + Invoice Emails automatically
       if (formData.email) {
+        const orderPayload = {
+          ...order,
+          items: orderItems,
+          client_name: `${formData.firstName} ${formData.lastName}`,
+          phone_contact: formData.phone,
+          shipping_address: formData.address,
+          shipping_area: formData.area || undefined,
+          shipping_city: formData.area || 'Abidjan',
+        };
+
+        // 4a. Send Order Confirmation Email
         try {
-          // Generate PDF invoice on the fly
-          const invoiceBase64 = generateInvoicePdf({
+          await sendEmail({
+            order: orderPayload,
+            type: "order_confirmed",
+            client_email: formData.email,
+          });
+          console.log("Order confirmation email sent successfully.");
+        } catch (confirmErr: any) {
+          console.error("Failed to send order confirmation email:", confirmErr);
+          // Non-blocking — continue to invoice
+        }
+
+        // 4b. Send Invoice Email with PDF attached
+        try {
+          const invoiceBase64 = await generateInvoicePdf({
             id: order.id,
             customer_name: `${formData.firstName} ${formData.lastName}`,
             customer_phone: formData.phone,
             shipping_address: formData.address,
-            shipping_area: formData.area,
+            shipping_area: formData.area || undefined,
             total_amount: finalTotal,
-            delivery_fee: deliveryFee,
+            delivery_fee: 0,
             payment_method: paymentMethod,
             created_at: order.created_at,
             items: orderItems.map(item => ({
@@ -243,9 +255,8 @@ export default function Checkout() {
             })),
           });
 
-          // Send the email with the invoice attached
           const { error: sendErr } = await sendEmail({
-            order: { ...order, items: orderItems, client_name: `${formData.firstName} ${formData.lastName}` },
+            order: orderPayload,
             type: "invoice",
             client_email: formData.email,
             invoice_base64: invoiceBase64
@@ -362,17 +373,13 @@ export default function Checkout() {
 
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="area">Zone de livraison</Label>
-                    <select 
+                    <Label htmlFor="area">Quartier / Zone</Label>
+                    <Input 
                       id="area"
-                      className="w-full h-12 bg-secondary/50 border border-border/50 rounded-xl px-4 text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
                       value={formData.area}
                       onChange={e => setFormData({...formData, area: e.target.value})}
-                    >
-                      {DELIVERY_AREAS.map(area => (
-                        <option key={area.name} value={area.name}>{area.name} (+{area.price} FCFA)</option>
-                      ))}
-                    </select>
+                      placeholder="Ex: Cocody, Marcory, Yopougon..."
+                    />
                   </div>
 
                   <div className="space-y-2">
@@ -385,6 +392,11 @@ export default function Checkout() {
                       onChange={e => setFormData({...formData, address: e.target.value})}
                       placeholder="Ex: Riviera Palmeraie, Rue Ministre, Immeuble X, Appartement Y"
                     />
+                  </div>
+
+                  <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                    <Truck className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                    <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">Frais de livraison à la charge du client</span>
                   </div>
                 </div>
               </div>
@@ -459,8 +471,8 @@ export default function Checkout() {
                     <span className="font-bold">{totalPrice.toLocaleString()} FCFA</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Frais de livraison</span>
-                    <span className="font-bold text-primary">+{deliveryFee.toLocaleString()} FCFA</span>
+                    <span className="text-muted-foreground">Livraison</span>
+                    <span className="font-bold text-orange-600 dark:text-orange-400">À la charge du client</span>
                   </div>
                   <div className="flex justify-between text-xl font-black pt-4 border-t border-dashed border-border mt-4">
                     <span>TOTAL</span>
