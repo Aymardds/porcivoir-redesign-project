@@ -25,6 +25,7 @@ import {
   FileDown
 } from 'lucide-react';
 import { generateQuotePDF, generateReceiptPDF } from '@/utils/pdfGenerator';
+import { useEmailNotification } from '@/hooks/useEmailNotification';
 
 interface QuoteFormData {
   client_name: string;
@@ -49,6 +50,7 @@ declare global {
 }
 
 const QuoteRequest = () => {
+  const { sendEmail } = useEmailNotification();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<QuoteFormData>({
     client_name: '',
@@ -356,6 +358,21 @@ const QuoteRequest = () => {
 
         generateQuotePDF(pdfData);
         generateReceiptPDF(pdfData);
+        const invoiceBase64 = generateQuotePDF(pdfData, true);
+
+        if (invoiceBase64) {
+          await sendEmail({
+            order: {
+              id: quoteData.id,
+              client_name: formData.client_name,
+              created_at: new Date().toISOString(),
+              total_amount: total,
+            },
+            type: 'invoice',
+            client_email: formData.client_email,
+            invoice_base64: invoiceBase64 as string,
+          });
+        }
 
         // Reset form
         setCurrentStep(1);

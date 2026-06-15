@@ -32,7 +32,7 @@ interface PDFData {
   };
 }
 
-export const generateQuotePDF = (data: PDFData) => {
+export const generateQuotePDF = (data: PDFData, returnBase64 = false) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.width;
 
@@ -117,6 +117,10 @@ export const generateQuotePDF = (data: PDFData) => {
   doc.setFont('helvetica', 'italic');
   doc.text("Ce document est un devis officiel généré par Porc'Ivoire Agri.", pageWidth / 2, 280, { align: 'center' });
   doc.text("Merci de votre confiance !", pageWidth / 2, 285, { align: 'center' });
+
+  if (returnBase64) {
+    return doc.output('datauristring');
+  }
 
   doc.save(`Devis_${data.quote.id.slice(0, 8)}.pdf`);
 };
