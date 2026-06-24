@@ -77,8 +77,8 @@ export async function generateInvoicePdf(order: InvoiceOrder): Promise<string> {
   });
 
   doc.setFontSize(9);
-  doc.setTextColor(100, 100, 100);
-  doc.text(`Date d'émission : ${issueDate}`, pageW - 15, 42, { align: 'right' });
+  doc.setTextColor(255, 255, 255); // Change to white to fit inside the green header
+  doc.text(`Date d'émission : ${issueDate}`, pageW - 15, 36, { align: 'right' });
 
   // Add QR Code
   try {
