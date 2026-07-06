@@ -46,6 +46,7 @@ import SettingsManagement from "./pages/admin/SettingsManagement.tsx";
 import TrainingsManagement from "./pages/admin/TrainingsManagement.tsx";
 import TrainingSubscriptions from "./pages/admin/TrainingSubscriptions.tsx";
 import InstantQuotesManagement from "./pages/admin/InstantQuotesManagement.tsx";
+import AdminFarmsManagement from "@/modules/farm/pages/AdminFarmsManagement";
 
 // Devis Module Imports
 import HomeDevis from "@/modules/quote-hub/pages/Home.tsx";
@@ -86,6 +87,7 @@ const App = () => (
                 {/* Admin-only: system settings, user management, customers, promotions, quotes, trainings, etc. */}
                 <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
                   <Route path="customers" element={<CustomersManagement />} />
+                  <Route path="farms" element={<AdminFarmsManagement />} />
                   <Route path="promotions" element={<PromotionsManagement />} />
                   <Route path="settings" element={<SettingsManagement />} />
                   <Route path="team" element={<UsersManagement />} />

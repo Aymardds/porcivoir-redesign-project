@@ -13,6 +13,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
 import { Link as RouterLink } from "react-router-dom";
+import CustomerFarmDashboard from "@/modules/farm/pages/CustomerFarmDashboard";
 
 // ─── Types ───────────────────────────────────────────────
 interface Order { id: string; created_at: string; status: string; total_amount: number; }
@@ -376,53 +377,9 @@ export default function CustomerDashboard() {
 
               {/* ─ TROUPEAU ─ */}
               {activeTab === "troupeau" && (
-                <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
-                  {/* Amber banner */}
-                  <div className="bg-gradient-to-br from-amber-600 to-yellow-500 p-6 text-white">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                        <Beef className="w-5 h-5" />
-                      </div>
-                      <h2 className="text-xl font-black">Gestion de Troupeaux</h2>
-                    </div>
-                    <p className="text-white/80 text-sm">
-                      Confiez le suivi de votre exploitation porcine à nos experts.
-                    </p>
-                  </div>
-
-                  <div className="p-6 space-y-4">
-                    {/* Info card */}
-                    <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 text-sm text-amber-800 font-medium">
-                      Ce service est géré directement par notre équipe d'experts.
-                      Soumettez une demande de devis pour démarrer votre accompagnement.
-                    </div>
-
-                    {/* Service list */}
-                    {[
-                      { title: "Santé animale", desc: "Suivi vétérinaire, vaccinations, prévention des maladies" },
-                      { title: "Nutrition", desc: "Optimisation des rations alimentaires et croissance" },
-                      { title: "Reproduction", desc: "Gestion du cycle, sélection génétique" },
-                      { title: "Performance & Reporting", desc: "Tableaux de bord et suivi mensuel dédié" },
-                    ].map((s) => (
-                      <div key={s.title} className="flex items-center gap-3 border border-border rounded-xl p-4">
-                        <CheckCircle className="w-5 h-5 text-amber-500 flex-shrink-0" />
-                        <div>
-                          <p className="font-bold text-foreground text-sm">{s.title}</p>
-                          <p className="text-xs text-muted-foreground">{s.desc}</p>
-                        </div>
-                      </div>
-                    ))}
-
-                    {/* CTA */}
-                    <RouterLink
-                      to="/devis"
-                      className="flex items-center justify-center gap-2 w-full bg-amber-600 text-white font-black py-4 rounded-xl hover:bg-amber-500 transition-colors shadow-sm mt-2"
-                    >
-                      Demander un accompagnement <ArrowRight className="w-5 h-5" />
-                    </RouterLink>
-                  </div>
-                </div>
+                <CustomerFarmDashboard />
               )}
+
 
             </div>
           </div>

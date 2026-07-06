@@ -12,7 +12,8 @@ import {
   Settings,
   FileText,
   GraduationCap,
-  Calculator
+  Calculator,
+  Beef
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -40,6 +41,7 @@ const AdminLayout = () => {
     { name: 'Inventaire', href: '/admin/inventory', icon: Package, roles: ['admin', 'stock_manager'] },
     { name: 'Catégories', href: '/admin/categories', icon: Tag, roles: ['admin', 'stock_manager'] },
     { name: 'Clients', href: '/admin/customers', icon: Users, roles: ['admin'] },
+    { name: 'Fermes & Cheptels', href: '/admin/farms', icon: Beef, roles: ['admin'] },
     { name: 'Blog', href: '/admin/blog', icon: FileText, roles: ['admin', 'editor', 'seo'] },
     { name: 'Modèles Devis', href: '/admin/instant-quotes', icon: Calculator, roles: ['admin'] },
     { name: 'Promotions', href: '/admin/promotions', icon: Tag, roles: ['admin'] },
