@@ -1,10 +1,11 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
     ArrowRight, ChevronRight, HeartPulse, BarChart3,
-    Wheat, Stethoscope, ShieldCheck, Clock
+    Wheat, Stethoscope, ShieldCheck, Clock, LogIn, UserPlus, Beef
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { useAuth } from "@/context/AuthContext";
 
 const services = [
     {
@@ -44,6 +45,16 @@ const steps = [
 ];
 
 export default function TroupeauPage() {
+    const { user } = useAuth();
+    const navigate = useNavigate();
+
+    const handleAccesDashboard = () => {
+        if (user) {
+            navigate("/mon-compte");
+        } else {
+            navigate("/login", { state: { from: "/mon-compte" } });
+        }
+    };
     return (
         <div className="min-h-screen bg-background flex flex-col">
             <Header />
@@ -66,17 +77,18 @@ export default function TroupeauPage() {
                         prennent en charge le suivi complet de votre exploitation porcine.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                        <Link
-                            to="/quote"
+                        <button
+                            onClick={handleAccesDashboard}
                             className="inline-flex items-center gap-2 bg-white text-amber-800 font-black px-8 py-4 rounded-xl text-base hover:bg-white/90 transition-all shadow-xl hover:-translate-y-0.5"
                         >
-                            Demander un accompagnement <ArrowRight className="w-5 h-5" />
-                        </Link>
+                            <Beef className="w-5 h-5" />
+                            {user ? "Accéder à mon espace élevage" : "Gérer mon troupeau"}
+                        </button>
                         <a
-                            href="#services"
+                            href="#acces"
                             className="inline-flex items-center gap-2 bg-white/15 border border-white/25 text-white font-bold px-8 py-4 rounded-xl text-base hover:bg-white/25 transition-all"
                         >
-                            Nos services
+                            En savoir plus
                         </a>
                     </div>
 
@@ -93,6 +105,47 @@ export default function TroupeauPage() {
                             </div>
                         ))}
                     </div>
+                </div>
+            </section>
+
+            {/* ── ACCES MODULE ── */}
+            <section id="acces" className="bg-background border-b border-border py-14">
+                <div className="container px-4 max-w-3xl mx-auto text-center">
+                    <p className="text-xs font-black uppercase tracking-widest text-amber-600 mb-3">Espace Éleveur</p>
+                    <h2 className="text-3xl font-black text-foreground mb-4">
+                        {user ? `Bonjour, accédez à votre espace 👋` : "Déjà éleveur avec nous ?"}
+                    </h2>
+                    <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
+                        {user
+                            ? "Retrouvez vos fermes, le suivi de votre troupeau, vos stocks d'aliments et votre historique vétérinaire."
+                            : "Connectez-vous ou créez un compte pour accéder au module de gestion de votre troupeau, stocks et suivi vétérinaire."
+                        }
+                    </p>
+                    {user ? (
+                        <Link
+                            to="/mon-compte"
+                            className="inline-flex items-center gap-2 bg-amber-600 text-white font-black px-8 py-4 rounded-xl text-base hover:bg-amber-700 transition-all shadow-lg hover:-translate-y-0.5"
+                        >
+                            <Beef className="w-5 h-5" /> Accéder à mon espace élevage
+                        </Link>
+                    ) : (
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                            <Link
+                                to="/login"
+                                state={{ from: "/mon-compte" }}
+                                className="inline-flex items-center gap-2 bg-amber-600 text-white font-black px-8 py-4 rounded-xl text-base hover:bg-amber-700 transition-all shadow-lg hover:-translate-y-0.5"
+                            >
+                                <LogIn className="w-5 h-5" /> Se connecter
+                            </Link>
+                            <Link
+                                to="/register"
+                                state={{ from: "/mon-compte" }}
+                                className="inline-flex items-center gap-2 border-2 border-amber-600 text-amber-700 font-black px-8 py-4 rounded-xl text-base hover:bg-amber-50 transition-all"
+                            >
+                                <UserPlus className="w-5 h-5" /> Créer un compte
+                            </Link>
+                        </div>
+                    )}
                 </div>
             </section>
 
@@ -174,12 +227,21 @@ export default function TroupeauPage() {
                     <p className="text-white/80 max-w-xl mx-auto mb-8 text-lg">
                         Contactez-nous pour un diagnostic gratuit de votre exploitation et un plan d'accompagnement personnalisé.
                     </p>
-                    <Link
-                        to="/quote"
-                        className="inline-flex items-center gap-2 bg-white text-amber-800 font-black px-8 py-4 rounded-xl text-base hover:bg-white/90 transition-all shadow-xl hover:-translate-y-0.5"
-                    >
-                        Contacter un expert <ArrowRight className="w-5 h-5" />
-                    </Link>
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                        <button
+                            onClick={handleAccesDashboard}
+                            className="inline-flex items-center gap-2 bg-white text-amber-800 font-black px-8 py-4 rounded-xl text-base hover:bg-white/90 transition-all shadow-xl hover:-translate-y-0.5"
+                        >
+                            <Beef className="w-5 h-5" />
+                            {user ? "Accéder à mon espace élevage" : "Créer mon compte éleveur"}
+                        </button>
+                        <Link
+                            to="/quote"
+                            className="inline-flex items-center gap-2 bg-white/15 border border-white/25 text-white font-bold px-8 py-4 rounded-xl text-base hover:bg-white/25 transition-all"
+                        >
+                            Contacter un expert <ArrowRight className="w-5 h-5" />
+                        </Link>
+                    </div>
                 </div>
             </section>
 
