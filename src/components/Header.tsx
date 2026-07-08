@@ -116,9 +116,9 @@ const Header = () => {
                     <p className="text-xs font-bold text-foreground">Connecté en tant que</p>
                     <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                   </div>
-                  {profile?.role === 'admin' && (
+                  {['admin', 'stock_manager', 'editor', 'seo'].includes(profile?.role) && (
                     <Link to="/admin" className="block px-4 py-2 text-sm text-foreground hover:bg-accent/10 hover:text-accent transition-colors">
-                      Espace Administration
+                      {profile?.role === 'stock_manager' ? 'Gestion de Stock' : 'Espace Administration'}
                     </Link>
                   )}
                   <Link to="/mon-compte" className="block px-4 py-2 text-sm text-foreground hover:bg-accent/10 hover:text-accent transition-colors">
@@ -260,9 +260,9 @@ const Header = () => {
                     <p className="text-xs text-muted-foreground font-sans font-black uppercase tracking-widest mb-3">
                       Mon Compte ({profile?.first_name || 'Client'})
                     </p>
-                    {profile?.role === 'admin' && (
+                    {['admin', 'stock_manager', 'editor', 'seo'].includes(profile?.role) && (
                       <Link to="/admin" onClick={() => setMobileOpen(false)} className="block py-2 text-sm font-bold text-foreground hover:text-accent border-b border-border/30">
-                        Espace Administration
+                        {profile?.role === 'stock_manager' ? 'Gestion de Stock' : 'Espace Administration'}
                       </Link>
                     )}
                     <Link to="/mon-compte" onClick={() => setMobileOpen(false)} className="block py-2 text-sm font-bold text-foreground hover:text-accent">
