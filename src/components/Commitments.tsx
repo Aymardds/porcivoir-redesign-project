@@ -3,28 +3,6 @@ import { ShoppingCart, ArrowRight } from "lucide-react";
 
 const commitments = [
   {
-    id: "fermiers",
-    image: "https://porcivoir.com/assets/images/capture-decran-2022-07-17-a-22.29.14-386x387.png",
-    eyebrow: "Nos Producteurs",
-    title: "Produit par les meilleurs éleveurs d'ici",
-    description:
-      "Répartis sur tout le territoire, nos 2 593 fermiers sont des passionnés de l'élevage biologique. Ils élèvent le Porc aux reflets des traditions de nos régions pour vous garantir une viande de qualité supérieure. Le Porc d'ici a une viande tendre et succulente avec un goût raffiné unique qui fait la fierté de nos territoires.",
-    cta: { label: "Visitez la boutique", to: "/boutique" },
-    accent: "bg-amber-50",
-    badge: "2 593 Fermiers",
-  },
-  {
-    id: "genomique",
-    image: "https://porcivoir.com/assets/images/image4-1235x874.png",
-    eyebrow: "Sélection Génomique",
-    title: "Sélectionnés pour la performance et la qualité",
-    description:
-      "Sélectionnés en utilisant la génomique et une large palette de critères, nos verrats et truies ont vocation à allier la performance, la qualité et la facilité de conduite. Certains couples garantissent une portée de 24 porcelets en moyenne par an et un rendement carcasse de 83 % dont 69 % de viande maigre.",
-    cta: { label: "En savoir plus", to: "/boutique" },
-    accent: "bg-green-50",
-    badge: "83% Rendement carcasse",
-  },
-  {
     id: "alimentation",
     image: "https://porcivoir.com/assets/images/postee-1168x765.png",
     eyebrow: "Alimentation Naturelle",
@@ -35,17 +13,6 @@ const commitments = [
     accent: "bg-emerald-50",
     badge: "Sans hormones",
   },
-  {
-    id: "equitable",
-    image: "https://porcivoir.com/assets/images/about-img3-2-606x606.png",
-    eyebrow: "Commerce Équitable",
-    title: "Votre achat rémunère justement nos fermiers",
-    description:
-      "En choisissant Porc'Ivoire, vous participez directement à la rémunération équitable de nos fermiers qui vous garantissent les meilleures produits de nos terroirs. Une prime qualité est reversée chaque mois aux éleveurs et une prime de traçabilité aux abattoirs partenaires.",
-    cta: { label: "Acheter maintenant", to: "/boutique" },
-    accent: "bg-orange-50",
-    badge: "Prime qualité mensuelle",
-  },
 ];
 
 export default function Commitments() {
@@ -53,20 +20,7 @@ export default function Commitments() {
     <section className="py-20 bg-secondary/10">
       <div className="container">
 
-        {/* Section Header */}
-        <div className="text-center mb-14">
-          <p className="text-xs font-black uppercase tracking-[0.25em] text-primary mb-3">
-            Nos engagements
-          </p>
-          <h2 className="text-3xl md:text-4xl font-black text-foreground mb-4">
-            De la ferme à votre table,{" "}
-            <span className="text-primary">l'excellence ivoirienne</span>
-          </h2>
-          <p className="text-muted-foreground max-w-xl mx-auto text-sm leading-relaxed">
-            Chaque découpe Porc'Ivoire est le fruit d'un savoir-faire artisanal, d'une
-            alimentation naturelle et d'une traçabilité garantie.
-          </p>
-        </div>
+
 
         {/* Commitments Grid - alternating layout */}
         <div className="space-y-16">
