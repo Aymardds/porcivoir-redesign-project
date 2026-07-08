@@ -13,12 +13,16 @@ import DeliveryBanner from "@/components/DeliveryBanner";
 import BlogSection from "@/components/BlogSection";
 import TrustBar from "@/components/TrustBar";
 import Footer from "@/components/Footer";
+import BrandStory from "@/components/BrandStory";
+import Commitments from "@/components/Commitments";
 
 const Index = () => (
   <div className="min-h-screen flex flex-col">
     <Header />
     <main className="flex-1">
       <HeroSlider />
+      <BrandStory />
+      <Commitments />
       <CategoryGrid />
       <TabbedProducts />
       <PromoBanners />
