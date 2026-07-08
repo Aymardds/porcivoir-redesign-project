@@ -1,3 +1,4 @@
+import React, { Suspense, lazy } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Outlet } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -6,53 +7,53 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { CartProvider } from "@/context/CartContext";
 import CartDrawer from "@/components/CartDrawer";
 import Index from "./pages/Index.tsx";
-import Shop from "./pages/Shop.tsx";
-import Checkout from "./pages/Checkout.tsx";
-import OrderSuccess from "./pages/OrderSuccess.tsx";
-import FactureDetail from "./pages/FactureDetail.tsx";
-import ProductDetail from "./pages/ProductDetail.tsx";
-import Blog from "./pages/Blog.tsx";
-import BlogPost from "./pages/BlogPost.tsx";
-import Trainings from "./pages/Trainings.tsx";
-import TrainingDetail from "./pages/TrainingDetail.tsx";
-import DevisPage from "./pages/DevisPage.tsx";
-import TroupeauPage from "./pages/TroupeauPage.tsx";
-import ContactPage from "./pages/ContactPage.tsx";
-import PartnerPage from "./pages/PartnerPage.tsx";
-import InstantQuoteGenerator from "./pages/InstantQuoteGenerator.tsx";
-import InstantQuoteView from "./pages/InstantQuoteView.tsx";
-import NotFound from "./pages/NotFound.tsx";
+const Shop = lazy(() => import("./pages/Shop.tsx"));
+const Checkout = lazy(() => import("./pages/Checkout.tsx"));
+const OrderSuccess = lazy(() => import("./pages/OrderSuccess.tsx"));
+const FactureDetail = lazy(() => import("./pages/FactureDetail.tsx"));
+const ProductDetail = lazy(() => import("./pages/ProductDetail.tsx"));
+const Blog = lazy(() => import("./pages/Blog.tsx"));
+const BlogPost = lazy(() => import("./pages/BlogPost.tsx"));
+const Trainings = lazy(() => import("./pages/Trainings.tsx"));
+const TrainingDetail = lazy(() => import("./pages/TrainingDetail.tsx"));
+const DevisPage = lazy(() => import("./pages/DevisPage.tsx"));
+const TroupeauPage = lazy(() => import("./pages/TroupeauPage.tsx"));
+const ContactPage = lazy(() => import("./pages/ContactPage.tsx"));
+const PartnerPage = lazy(() => import("./pages/PartnerPage.tsx"));
+const InstantQuoteGenerator = lazy(() => import("./pages/InstantQuoteGenerator.tsx"));
+const InstantQuoteView = lazy(() => import("./pages/InstantQuoteView.tsx"));
+const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
 import { AuthProvider } from "@/context/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import Login from "./pages/Login.tsx";
-import Register from "./pages/Register.tsx";
-import ForgotPassword from "./pages/ForgotPassword.tsx";
-import ResetPassword from "./pages/ResetPassword.tsx";
-import CustomerDashboard from "./pages/CustomerDashboard.tsx";
-import AdminLayout from "./pages/admin/AdminLayout.tsx";
-import Dashboard from "./pages/admin/Dashboard.tsx";
-import InventoryManagement from "./pages/admin/InventoryManagement.tsx";
-import OrdersManagement from "./pages/admin/OrdersManagement.tsx";
-import CustomersManagement from "./pages/admin/CustomersManagement.tsx";
-import PromotionsManagement from "./pages/admin/PromotionsManagement.tsx";
-import UsersManagement from "./pages/admin/UsersManagement.tsx";
-import CategoriesManagement from "./pages/admin/CategoriesManagement.tsx";
-import BlogManagement from "./pages/admin/BlogManagement.tsx";
-import BlogEditor from "./pages/admin/BlogEditor.tsx";
-import QuotesManagement from "./pages/admin/QuotesManagement.tsx";
-import ServicesManagement from "./pages/admin/ServicesManagement.tsx";
-import SettingsManagement from "./pages/admin/SettingsManagement.tsx";
-import TrainingsManagement from "./pages/admin/TrainingsManagement.tsx";
-import TrainingSubscriptions from "./pages/admin/TrainingSubscriptions.tsx";
-import InstantQuotesManagement from "./pages/admin/InstantQuotesManagement.tsx";
-import AdminFarmsManagement from "@/modules/farm/pages/AdminFarmsManagement";
+const Login = lazy(() => import("./pages/Login.tsx"));
+const Register = lazy(() => import("./pages/Register.tsx"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword.tsx"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword.tsx"));
+const CustomerDashboard = lazy(() => import("./pages/CustomerDashboard.tsx"));
+const AdminLayout = lazy(() => import("./pages/admin/AdminLayout.tsx"));
+const Dashboard = lazy(() => import("./pages/admin/Dashboard.tsx"));
+const InventoryManagement = lazy(() => import("./pages/admin/InventoryManagement.tsx"));
+const OrdersManagement = lazy(() => import("./pages/admin/OrdersManagement.tsx"));
+const CustomersManagement = lazy(() => import("./pages/admin/CustomersManagement.tsx"));
+const PromotionsManagement = lazy(() => import("./pages/admin/PromotionsManagement.tsx"));
+const UsersManagement = lazy(() => import("./pages/admin/UsersManagement.tsx"));
+const CategoriesManagement = lazy(() => import("./pages/admin/CategoriesManagement.tsx"));
+const BlogManagement = lazy(() => import("./pages/admin/BlogManagement.tsx"));
+const BlogEditor = lazy(() => import("./pages/admin/BlogEditor.tsx"));
+const QuotesManagement = lazy(() => import("./pages/admin/QuotesManagement.tsx"));
+const ServicesManagement = lazy(() => import("./pages/admin/ServicesManagement.tsx"));
+const SettingsManagement = lazy(() => import("./pages/admin/SettingsManagement.tsx"));
+const TrainingsManagement = lazy(() => import("./pages/admin/TrainingsManagement.tsx"));
+const TrainingSubscriptions = lazy(() => import("./pages/admin/TrainingSubscriptions.tsx"));
+const InstantQuotesManagement = lazy(() => import("./pages/admin/InstantQuotesManagement.tsx"));
+const AdminFarmsManagement = lazy(() => import("@/modules/farm/pages/AdminFarmsManagement"));
 
 // Devis Module Imports
-import HomeDevis from "@/modules/quote-hub/pages/Home.tsx";
-import QuoteRequestDevis from "@/modules/quote-hub/pages/QuoteRequest.tsx";
-import PaymentSuccessDevis from "@/modules/quote-hub/pages/PaymentSuccess.tsx";
-import NavigationDevis from "@/modules/quote-hub/components/Navigation.tsx";
+const HomeDevis = lazy(() => import("@/modules/quote-hub/pages/Home.tsx"));
+const QuoteRequestDevis = lazy(() => import("@/modules/quote-hub/pages/QuoteRequest.tsx"));
+const PaymentSuccessDevis = lazy(() => import("@/modules/quote-hub/pages/PaymentSuccess.tsx"));
+const NavigationDevis = lazy(() => import("@/modules/quote-hub/components/Navigation.tsx"));
 
 const queryClient = new QueryClient();
 const isDevisModule = window.location.hostname.startsWith('devis');
@@ -64,6 +65,7 @@ const App = () => (
       <Sonner />
       <AuthProvider>
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Chargement...</div>}>
           <Routes>
             {/* Admin Secure Routes */}
             <Route element={<ProtectedRoute allowedRoles={['admin', 'editor', 'seo', 'stock_manager']} />}>
@@ -160,6 +162,7 @@ const App = () => (
               </Route>
             )}
           </Routes>
+          </Suspense>
         </BrowserRouter>
       </AuthProvider>
     </TooltipProvider>
