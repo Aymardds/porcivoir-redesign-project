@@ -1,4 +1,4 @@
-# robots.txt for Porc'Ivoire (https://porcivoir.com)
+# robots.txt for Porc'Ivoire (https://www.porcivoir.com)
 User-agent: *
 Allow: /
 Allow: /boutique
@@ -23,4 +23,5 @@ Disallow: /forgot-password
 Disallow: /reset-password
 
 # Host and Sitemap
-Sitemap: https://porcivoir.com/sitemap.xml
+Sitemap: https://www.porcivoir.com/sitemap.xml
+

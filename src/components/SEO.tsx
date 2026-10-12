@@ -14,8 +14,8 @@ export const DEFAULT_SEO = {
   title: "Porc'Ivoire — Viande de Porc Fraîche & Élevage en Côte d'Ivoire",
   description:
     "Commandez votre viande de porc fraîche en ligne en Côte d'Ivoire. Découpes de porc de qualité supérieure, porcs sur pied, conseils d'élevage et livraison rapide à Abidjan et environs.",
-  image: "https://porcivoir.com/og-image.png",
-  url: "https://porcivoir.com/",
+  image: "https://www.porcivoir.com/og-image.png",
+  url: "https://www.porcivoir.com/",
   keywords:
     "porcivoire, viande de porc abidjan, boucherie porcine cote d'ivoire, porc frais abidjan, elevage porcin abidjan, porcelet cote d'ivoire, cote de porc, poitrine de porc, livraison viande abidjan",
 };
