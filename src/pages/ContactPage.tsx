@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import SEO from "@/components/SEO";
 
 const infos = [
     { icon: Phone, label: "Téléphone", value: "07 87 295 734", href: "tel:+2250787295734" },
@@ -45,6 +46,11 @@ export default function ContactPage() {
 
     return (
         <div className="min-h-screen bg-background flex flex-col">
+            <SEO
+                title="Contactez Porc'Ivoire — Boucherie & Service Client Abidjan"
+                description="Une question sur nos produits de porc, une commande spéciale ou nos formations ? Contactez le service client Porc'Ivoire à Abidjan."
+                url="https://porcivoir.com/contact"
+            />
             <Header />
 
             {/* Hero */}

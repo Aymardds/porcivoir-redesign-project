@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import SEO from "@/components/SEO";
 
 const SUBJECTS = [
     {
@@ -74,6 +75,11 @@ export default function PartnerPage() {
 
     return (
         <div className="min-h-screen bg-background flex flex-col">
+            <SEO
+                title="Devenir Partenaire & Éleveur Référencé — Porc'Ivoire"
+                description="Rejoignez le réseau Porc'Ivoire : distribution, groupement d'éleveurs partenaires, fourniture et opportunités de collaboration commerciale en Côte d'Ivoire."
+                url="https://porcivoir.com/partenaire"
+            />
             <Header />
 
             {/* Hero */}

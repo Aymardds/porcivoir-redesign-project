@@ -238,7 +238,7 @@ const QuoteRequest = () => {
 
       const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
       const notifyUrl = isLocalhost
-        ? 'https://porcivoire.vercel.app/api/cinetpay-notify'
+        ? 'https://porcivoir.com/api/cinetpay-notify'
         : `${window.location.origin}/api/cinetpay-notify`;
 
       CP.setConfig({

@@ -1,21 +1,35 @@
 {
-  "name": "Porc'Ivoire",
+  "name": "Porc'Ivoire — Viande de Porc Fraîche & Élevage en Côte d'Ivoire",
   "short_name": "Porc'Ivoire",
-  "description": "Viande de Porc Fraîche en Côte d'Ivoire",
+  "description": "Boucherie porcine en ligne et élevage moderne en Côte d'Ivoire. Vente de viande de porc fraîche, découpes de qualité, porcs sur pied et livraison rapide à Abidjan.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#009e4f",
+  "orientation": "portrait-primary",
+  "lang": "fr-CI",
   "icons": [
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
     {
       "src": "/android-chrome-192x192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "/android-chrome-512x512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
-  ],
-  "theme_color": "#1a0f00",
-  "background_color": "#1a0f00",
-  "display": "standalone",
-  "start_url": "/"
+  ]
 }

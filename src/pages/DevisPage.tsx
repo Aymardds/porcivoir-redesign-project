@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 
 const services = [
     {
@@ -56,6 +57,11 @@ const faqs = [
 export default function DevisPage() {
     return (
         <div className="min-h-screen bg-background flex flex-col">
+            <SEO
+                title="Demande de Devis & Estimation Élevage Porcin Sur Mesure"
+                description="Obtenez votre devis agro-pastoral personnalisé en 48h : aménagement de porcherie, équipements, approvisionnement et études de faisabilité par Porc'Ivoire."
+                url="https://porcivoir.com/devis"
+            />
             <Header />
 
             {/* ── HERO ── */}

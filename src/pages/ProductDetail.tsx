@@ -6,6 +6,7 @@ import { useCart } from "@/context/CartContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
+import SEO from "@/components/SEO";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -75,8 +76,43 @@ const ProductDetail = () => {
     );
   }
 
+  const productDescription = product?.description
+    ? new DOMParser().parseFromString(product.description, "text/html").body.textContent?.trim() || product.description
+    : `Achetez ${product?.title} frais au kilo sur Porc'Ivoire. Qualité garantie, découpe hygiénique et livraison express à Abidjan.`;
+
+  const productJsonLd = product ? {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": product.title,
+    "image": product.image_url ? [product.image_url] : ["https://porcivoir.com/og-image.png"],
+    "description": productDescription,
+    "sku": product.id,
+    "category": product.categories?.name || "Viande de porc",
+    "offers": {
+      "@type": "Offer",
+      "url": `https://porcivoir.com/produit/${product.slug}`,
+      "priceCurrency": "XOF",
+      "price": product.price,
+      "priceValidUntil": "2027-12-31",
+      "itemCondition": "https://schema.org/NewCondition",
+      "availability": "https://schema.org/InStock",
+      "seller": {
+        "@type": "Organization",
+        "name": "Porc'Ivoire"
+      }
+    }
+  } : undefined;
+
   return (
     <div className="min-h-screen flex flex-col bg-secondary/5">
+      <SEO
+        title={`${product.title} - Découpe de Porc Frais`}
+        description={productDescription}
+        image={product.image_url || "https://porcivoir.com/og-image.png"}
+        url={`https://porcivoir.com/produit/${product.slug}`}
+        type="product"
+        jsonLd={productJsonLd}
+      />
       <Header />
       <main className="flex-1">
         {/* Breadcrumb */}

@@ -117,7 +117,7 @@ export default function InstantQuoteGenerator() {
             if (!CP) throw new Error("Plateforme de paiement CinetPay indisponible.");
 
             const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-            const notifyUrl = isLocalhost ? 'https://porcivoire.vercel.app/api/cinetpay-notify' : `${window.location.origin}/api/cinetpay-notify`;
+            const notifyUrl = isLocalhost ? 'https://porcivoir.com/api/cinetpay-notify' : `${window.location.origin}/api/cinetpay-notify`;
             const returnUrl = isLocalhost ? `http://localhost:8080/mes-devis/resultat/${quoteData.id}` : `${window.location.origin}/mes-devis/resultat/${quoteData.id}`;
 
             CP.setConfig({

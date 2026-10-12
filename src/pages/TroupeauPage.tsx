@@ -6,6 +6,7 @@ import {
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/context/AuthContext";
+import SEO from "@/components/SEO";
 
 const services = [
     {
@@ -57,6 +58,11 @@ export default function TroupeauPage() {
     };
     return (
         <div className="min-h-screen bg-background flex flex-col">
+            <SEO
+                title="Gestion de Troupeau & Suivi d'Élevage Porcin en Côte d'Ivoire"
+                description="Confiez la gestion, nutrition, santé animale et reproduction de votre cheptel porcin aux experts Porc'Ivoire. Suivi d'exploitation dans toute la Côte d'Ivoire."
+                url="https://porcivoir.com/troupeau"
+            />
             <Header />
 
             {/* ── HERO ── */}

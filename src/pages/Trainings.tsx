@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 
 const features = [
     {
@@ -66,6 +67,11 @@ export default function Trainings() {
 
     return (
         <div className="min-h-screen bg-background flex flex-col">
+            <SEO
+                title="Formations en Élevage Porcin Moderne en Côte d'Ivoire"
+                description="Développez vos compétences agricoles avec nos formations pratiques en conduite d'élevage porcin, alimentation, biosécurité et rentabilité animées par des experts reconnus."
+                url="https://porcivoir.com/formations"
+            />
             <Header />
 
             {/* ── HERO ───────────────────────────────────────────────── */}

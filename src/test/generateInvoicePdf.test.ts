@@ -27,8 +27,8 @@ describe("generateInvoicePdf", () => {
     ],
   };
 
-  it("should generate a PDF data URI string successfully", () => {
-    const result = generateInvoicePdf(mockOrder);
+  it("should generate a PDF data URI string successfully", async () => {
+    const result = await generateInvoicePdf(mockOrder);
     expect(result).toBeTypeOf("string");
     expect(result.startsWith("data:application/pdf;")).toBe(true);
   });

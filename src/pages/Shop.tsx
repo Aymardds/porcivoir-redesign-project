@@ -10,6 +10,7 @@ import { useCart } from "@/context/CartContext";
 import { Link } from "react-router-dom";
 import PromoDealBanner from "@/components/PromoDealBanner";
 import MiniCountdown from "@/components/MiniCountdown";
+import SEO from "@/components/SEO";
 
 export default function Shop() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -91,6 +92,12 @@ export default function Shop() {
 
   return (
     <div className="min-h-screen flex flex-col bg-secondary/5">
+      <SEO
+        title={categoryParam !== "Tout" ? `${categoryParam} — Boucherie Porc'Ivoire` : "Boutique en Ligne — Viande de Porc Fraîche & Découpes au Kilo"}
+        description="Commandez vos découpes de porc frais au kilo : côtes, poitrine, filet, jarret, saucisses et porcs entiers avec livraison express à Abidjan."
+        keywords="boutique viande de porc abidjan, cotes de porc, poitrine porc cote d'ivoire, filet de porc abidjan, commande porc frais abidjan"
+        url={`https://porcivoir.com/boutique${categoryParam !== "Tout" ? `?categorie=${encodeURIComponent(categoryParam)}` : ""}`}
+      />
       <Header />
 
       {/* Page Header */}

@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { ArrowRight, Calendar, User, FileText, Loader2 } from 'lucide-react';
+import SEO from '@/components/SEO';
 
 export default function Blog() {
   const [blogs, setBlogs] = useState<any[]>([]);
@@ -40,6 +41,11 @@ export default function Blog() {
 
   return (
     <div className="min-h-screen flex flex-col bg-secondary">
+      <SEO 
+        title="Actualités, Recettes & Élevage Porcin — Blog Porc'Ivoire"
+        description="Découvrez les actualités de Porc'Ivoire, nos guides d'élevage porcin en Afrique de l'Ouest, astuces de conservation et succulentes recettes de porc ivoirien."
+        url="https://porcivoir.com/blog"
+      />
       <Header />
       
       <main className="flex-grow pt-24 pb-16">

@@ -100,7 +100,7 @@ export default function Checkout() {
       const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
       // notify_url must be a publicly reachable HTTPS URL — update with your Vercel domain
       const notifyUrl = isLocalhost
-        ? 'https://porcivoire.vercel.app/api/cinetpay-notify'
+        ? 'https://porcivoir.com/api/cinetpay-notify'
         : `${window.location.origin}/api/cinetpay-notify`;
 
       CP.setConfig({

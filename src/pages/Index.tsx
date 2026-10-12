@@ -15,9 +15,11 @@ import TrustBar from "@/components/TrustBar";
 import Footer from "@/components/Footer";
 import BrandStory from "@/components/BrandStory";
 import Commitments from "@/components/Commitments";
+import SEO from "@/components/SEO";
 
 const Index = () => (
   <div className="min-h-screen flex flex-col">
+    <SEO />
     <Header />
     <main className="flex-1">
       <HeroSlider />

@@ -5,6 +5,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import DOMPurify from 'dompurify';
 import { ArrowLeft, Calendar, User, Loader2 } from 'lucide-react';
+import SEO from '@/components/SEO';
 
 export default function BlogPost() {
   const { slug } = useParams();
@@ -73,8 +74,38 @@ export default function BlogPost() {
   // Sécuriser le contenu HTML provenant de ReactQuill
   const sanitizedContent = DOMPurify.sanitize(blog.content);
 
+  const blogJsonLd = blog ? {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": blog.title,
+    "image": blog.cover_image ? [blog.cover_image] : ["https://porcivoir.com/og-image.png"],
+    "datePublished": blog.created_at,
+    "dateModified": blog.created_at,
+    "author": {
+      "@type": "Person",
+      "name": blog.profiles ? `${blog.profiles.first_name || ''} ${blog.profiles.last_name || ''}`.trim() : "Porc'Ivoire"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Porc'Ivoire",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://porcivoir.com/android-chrome-512x512.png"
+      }
+    },
+    "description": blog.excerpt || blog.title
+  } : undefined;
+
   return (
     <div className="min-h-screen flex flex-col bg-secondary">
+      <SEO
+        title={blog.title}
+        description={blog.excerpt || `Lisez l'article complet "${blog.title}" sur le blog Porc'Ivoire.`}
+        image={blog.cover_image || "https://porcivoir.com/og-image.png"}
+        url={`https://porcivoir.com/blog/${blog.slug}`}
+        type="article"
+        jsonLd={blogJsonLd}
+      />
       <Header />
       
       <main className="flex-grow pt-24 pb-24">
