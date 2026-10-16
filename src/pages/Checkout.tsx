@@ -20,7 +20,7 @@ import { generateInvoicePdf } from "@/utils/generateInvoicePdf";
 export default function Checkout() {
   const { items, totalPrice, clearCart } = useCart();
   const navigate = useNavigate();
-  const { sendEmail } = useEmailNotification();
+  const { sendEmail, sendTeamNotification } = useEmailNotification();
   const { user, profile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -279,6 +279,25 @@ export default function Checkout() {
         }
       }
 
+      // 4c. Notify commercial team (active subscribers) — non-blocking
+      try {
+        const teamOrderPayload = {
+          ...order,
+          items: orderItems,
+          client_name: `${formData.firstName} ${formData.lastName}`,
+          client_email: formData.email,
+          phone_contact: formData.phone,
+          shipping_address: formData.address,
+          shipping_area: formData.area || undefined,
+          shipping_city: formData.area || 'Abidjan',
+        };
+        // Fire-and-forget: does not block navigation
+        sendTeamNotification(teamOrderPayload).catch((err) =>
+          console.error('Team notification failed silently:', err)
+        );
+      } catch (teamErr) {
+        console.error('Error triggering team notification:', teamErr);
+      }
 
       // 5. Clear cart and redirect
       clearCart();

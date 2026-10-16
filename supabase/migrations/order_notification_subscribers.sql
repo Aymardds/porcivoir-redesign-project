@@ -51,3 +51,22 @@ CREATE POLICY "allow_delete_subscribers"
 
 CREATE INDEX IF NOT EXISTS idx_order_notif_active ON public.order_notification_subscribers(active);
 CREATE INDEX IF NOT EXISTS idx_order_notif_email  ON public.order_notification_subscribers(email);
+
+-- ============================================================
+-- Service Role Policy (pour la Edge Function send-order-email)
+-- La fonction appelle Supabase avec la clé service_role,
+-- donc elle contourne le RLS automatiquement.
+--
+-- Template email suggéré pour type 'new_order_team' dans
+-- la Edge Function send-order-email :
+--
+-- Objet: 🛒 Nouvelle commande #{{order.id}} — {{order.client_name}}
+-- Corps:
+--   Une nouvelle commande vient d'être passée sur la boutique.
+--   Client    : {{order.client_name}} ({{order.client_email}})
+--   Téléphone : {{order.phone_contact}}
+--   Adresse   : {{order.shipping_address}}, {{order.shipping_city}}
+--   Total     : {{order.total_amount}} FCFA
+--   Articles  : {{order.items}}
+--   Méthode   : {{order.payment_method}}
+-- ============================================================
