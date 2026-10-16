@@ -8,7 +8,7 @@ const items = [
     id: "histoire",
     title: "Notre Histoire",
     content:
-      "Née en 2012 à l'initiative de la Grainothèque, la marque collective et indication géographique PORCIVOIRE vise à guider les consommateurs vers des produits de Côte d'Ivoire à l'origine garantie, qui participent à la sauvegarde de la filière porcine ivoirienne. Viandes fraîches, salaisons, pâtés… porteurs de la marque sont produits avec de la viande de qualité supérieure issue d'élevages familiaux, dans le respect des savoir-faire artisanaux, des méthodes naturelles de fabrication et de la tradition d'innovation de PORCIVOIRE.",
+      "Née en 2020 à l'initiative de la Grainothèque, la marque collective et indication géographique PORCIVOIRE vise à guider les consommateurs vers des produits de Côte d'Ivoire à l'origine garantie, qui participent à la sauvegarde de la filière porcine ivoirienne. Viandes fraîches, salaisons, pâtés… porteurs de la marque sont produits avec de la viande de qualité supérieure issue d'élevages familiaux, dans le respect des savoir-faire artisanaux, des méthodes naturelles de fabrication et de la tradition d'innovation de PORCIVOIRE.",
   },
   {
     id: "vision",
@@ -133,7 +133,7 @@ export default function BrandStory() {
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground font-semibold">Fondé en</p>
-                    <p className="text-lg font-black text-foreground">2012</p>
+                    <p className="text-lg font-black text-foreground">2020</p>
                   </div>
                   <div className="border-l border-border/50 pl-4 ml-auto">
                     <p className="text-xs text-muted-foreground font-semibold">Fermiers partenaires</p>
