@@ -49,7 +49,7 @@ const StatCard = ({ title, value, icon: Icon, trend, loading, variant = "default
 );
 
 const Dashboard = () => {
-  const { profile } = useAuth();
+  const { profile, hasRole } = useAuth();
   const [stats, setStats] = useState({
     revenueGlobal: 0,
     revenueStore: 0,
@@ -168,7 +168,7 @@ const Dashboard = () => {
     }).format(amount);
   };
 
-  const isStockManager = profile?.role === 'stock_manager';
+  const isStockManager = hasRole('stock_manager') && !hasRole('admin', 'commercial');
 
   return (
     <div className="space-y-8 animate-fade-in pb-12">

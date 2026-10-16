@@ -120,7 +120,14 @@ const AdminLayout = () => {
             </div>
             <div className="overflow-hidden">
               <p className="text-sm font-bold truncate">{profile?.first_name} {profile?.last_name}</p>
-              <p className="text-xs text-muted-foreground">{getRoleLabel(profile?.role)}</p>
+              <p
+                className="text-xs text-muted-foreground truncate"
+                title={profile?.roles?.map(getRoleLabel).join(', ') || getRoleLabel(profile?.role)}
+              >
+                {profile?.roles && profile.roles.length > 0
+                  ? profile.roles.map(getRoleLabel).join(' • ')
+                  : getRoleLabel(profile?.role)}
+              </p>
             </div>
           </div>
           <Button

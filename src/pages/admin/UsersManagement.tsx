@@ -91,10 +91,12 @@ function InlineRoleEditor({
   user,
   currentUserId,
   onSaved,
+  teamOnly = true,
 }: {
   user: any;
   currentUserId?: string;
   onSaved: () => void;
+  teamOnly?: boolean;
 }) {
   const isSelf = user.id === currentUserId;
   const initial: UserRole[] = Array.isArray(user.roles) && user.roles.length > 0
@@ -156,7 +158,7 @@ function InlineRoleEditor({
 
   return (
     <div className="space-y-3 min-w-[280px]">
-      <RolePicker selected={draft} onChange={setDraft} disabled={isSelf} />
+      <RolePicker selected={draft} onChange={setDraft} disabled={isSelf} teamOnly={teamOnly} />
       <div className="flex gap-2">
         <Button size="sm" onClick={save} disabled={saving} className="h-7 text-xs px-3">
           {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <><Check className="w-3 h-3 mr-1" />Sauvegarder</>}
@@ -197,7 +199,25 @@ export default function UsersManagement() {
     }
   }, []);
 
-  useEffect(() => { fetchUsers(); }, [fetchUsers]);
+  useEffect(() => {
+    fetchUsers();
+
+    // Synchronisation en temps réel de tous les utilisateurs et de leurs rôles
+    const channel = supabase
+      .channel('team-users-realtime-sync')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'profiles' },
+        () => {
+          fetchUsers();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchUsers]);
   useEffect(() => { setSearchTerm(''); setRoleFilter('all'); }, [activeTab]);
 
   const getUserRoles = (user: any): UserRole[] =>
@@ -428,17 +448,12 @@ export default function UsersManagement() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        {activeTab === 'team' ? (
-                          <InlineRoleEditor
-                            user={user}
-                            currentUserId={currentProfile?.id}
-                            onSaved={fetchUsers}
-                          />
-                        ) : (
-                          <span className="text-xs font-bold px-2.5 py-1 rounded-full border bg-gray-100 text-gray-600 border-gray-200">
-                            Client
-                          </span>
-                        )}
+                        <InlineRoleEditor
+                          user={user}
+                          currentUserId={currentProfile?.id}
+                          onSaved={fetchUsers}
+                          teamOnly={activeTab === 'team'}
+                        />
                       </td>
                       <td className="px-6 py-4 text-muted-foreground">
                         {new Date(user.created_at).toLocaleDateString('fr-FR')}

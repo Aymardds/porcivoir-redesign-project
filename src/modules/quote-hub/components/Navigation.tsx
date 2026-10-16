@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 const Navigation = () => {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, hasRole } = useAuth();
   const location = useLocation();
 
   const isActive = (path: string) => location.pathname === path;
@@ -50,7 +50,7 @@ const Navigation = () => {
               Demander un devis
             </Link>
 
-            {profile?.role === 'admin' || profile?.role === 'staff' ? (
+            {hasRole('admin', 'commercial', 'stock_manager', 'editor', 'seo') || (profile?.role as any) === 'staff' ? (
               <Link
                 to="/admin"
                 className={`transition-colors ${isActive('/admin')
@@ -85,7 +85,7 @@ const Navigation = () => {
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
 
-                  {(profile?.role === 'admin' || profile?.role === 'staff') && (
+                  {(hasRole('admin', 'commercial', 'stock_manager', 'editor', 'seo') || (profile?.role as any) === 'staff') && (
                     <>
                       <DropdownMenuItem asChild>
                         <Link to="/admin" className="flex items-center">
