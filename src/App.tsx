@@ -48,6 +48,7 @@ const TrainingsManagement = lazy(() => import("./pages/admin/TrainingsManagement
 const TrainingSubscriptions = lazy(() => import("./pages/admin/TrainingSubscriptions.tsx"));
 const InstantQuotesManagement = lazy(() => import("./pages/admin/InstantQuotesManagement.tsx"));
 const AdminFarmsManagement = lazy(() => import("@/modules/farm/pages/AdminFarmsManagement"));
+const OrderNotifications = lazy(() => import("./pages/admin/OrderNotifications.tsx"));
 
 // Devis Module Imports
 const HomeDevis = lazy(() => import("@/modules/quote-hub/pages/Home.tsx"));
@@ -73,12 +74,12 @@ const App = () => (
           }>
           <Routes>
             {/* Admin Secure Routes */}
-            <Route element={<ProtectedRoute allowedRoles={['admin', 'editor', 'seo', 'stock_manager']} />}>
+            <Route element={<ProtectedRoute allowedRoles={['admin', 'editor', 'seo', 'stock_manager', 'commercial']} />}>
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<Dashboard />} />
                 
                 {/* Stock Manager & Admin: inventory, categories, orders */}
-                <Route element={<ProtectedRoute allowedRoles={['admin', 'stock_manager']} />}>
+                <Route element={<ProtectedRoute allowedRoles={['admin', 'stock_manager', 'commercial']} />}>
                   <Route path="inventory" element={<InventoryManagement />} />
                   <Route path="categories" element={<CategoriesManagement />} />
                   <Route path="orders" element={<OrdersManagement />} />
@@ -92,17 +93,22 @@ const App = () => (
                 </Route>
 
                 {/* Admin-only: system settings, user management, customers, promotions, quotes, trainings, etc. */}
-                <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+                <Route element={<ProtectedRoute allowedRoles={['admin', 'commercial']} />}>
                   <Route path="customers" element={<CustomersManagement />} />
-                  <Route path="farms" element={<AdminFarmsManagement />} />
                   <Route path="promotions" element={<PromotionsManagement />} />
+                  <Route path="instant-quotes" element={<InstantQuotesManagement />} />
+                  <Route path="order-notifications" element={<OrderNotifications />} />
+                </Route>
+
+                {/* Admin-only strictly */}
+                <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+                  <Route path="farms" element={<AdminFarmsManagement />} />
                   <Route path="settings" element={<SettingsManagement />} />
                   <Route path="team" element={<UsersManagement />} />
                   <Route path="quotes" element={<QuotesManagement />} />
                   <Route path="services" element={<ServicesManagement />} />
                   <Route path="trainings" element={<TrainingsManagement />} />
                   <Route path="training-subscriptions" element={<TrainingSubscriptions />} />
-                  <Route path="instant-quotes" element={<InstantQuotesManagement />} />
                 </Route>
 
                 <Route path="*" element={<Dashboard />} />

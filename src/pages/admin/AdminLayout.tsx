@@ -13,7 +13,8 @@ import {
   FileText,
   GraduationCap,
   Calculator,
-  Beef
+  Beef,
+  BellRing
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -30,23 +31,25 @@ const AdminLayout = () => {
       case 'stock_manager': return 'Gestionnaire Stock';
       case 'editor': return 'Rédacteur';
       case 'seo': return 'Responsable SEO';
+      case 'commercial': return 'Commercial';
       case 'customer': return 'Client';
       default: return role || '';
     }
   };
 
   const fullNavigation = [
-    { name: 'Tableau de bord', href: '/admin', icon: LayoutDashboard, roles: ['admin', 'editor', 'seo', 'stock_manager'] },
-    { name: 'Commandes', href: '/admin/orders', icon: ShoppingCart, roles: ['admin', 'stock_manager'] },
+    { name: 'Tableau de bord', href: '/admin', icon: LayoutDashboard, roles: ['admin', 'editor', 'seo', 'stock_manager', 'commercial'] },
+    { name: 'Commandes', href: '/admin/orders', icon: ShoppingCart, roles: ['admin', 'stock_manager', 'commercial'] },
     { name: 'Inventaire', href: '/admin/inventory', icon: Package, roles: ['admin', 'stock_manager'] },
     { name: 'Catégories', href: '/admin/categories', icon: Tag, roles: ['admin', 'stock_manager'] },
-    { name: 'Clients', href: '/admin/customers', icon: Users, roles: ['admin'] },
+    { name: 'Clients', href: '/admin/customers', icon: Users, roles: ['admin', 'commercial'] },
     { name: 'Fermes & Cheptels', href: '/admin/farms', icon: Beef, roles: ['admin'] },
     { name: 'Blog', href: '/admin/blog', icon: FileText, roles: ['admin', 'editor', 'seo'] },
-    { name: 'Modèles Devis', href: '/admin/instant-quotes', icon: Calculator, roles: ['admin'] },
-    { name: 'Promotions', href: '/admin/promotions', icon: Tag, roles: ['admin'] },
+    { name: 'Modèles Devis', href: '/admin/instant-quotes', icon: Calculator, roles: ['admin', 'commercial'] },
+    { name: 'Promotions', href: '/admin/promotions', icon: Tag, roles: ['admin', 'commercial'] },
     { name: 'Formations', href: '/admin/trainings', icon: GraduationCap, roles: ['admin'] },
     { name: 'Souscriptions', href: '/admin/training-subscriptions', icon: GraduationCap, roles: ['admin'] },
+    { name: 'Notif. Commandes', href: '/admin/order-notifications', icon: BellRing, roles: ['admin', 'commercial'] },
     { name: 'Équipe', href: '/admin/team', icon: Users, roles: ['admin'] },
     { name: 'Paramètres', href: '/admin/settings', icon: Settings, roles: ['admin'] },
   ];

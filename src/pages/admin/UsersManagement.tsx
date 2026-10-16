@@ -6,13 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
-type UserRole = 'customer' | 'admin' | 'editor' | 'stock_manager' | 'seo';
+type UserRole = 'customer' | 'admin' | 'editor' | 'stock_manager' | 'seo' | 'commercial';
 type TabId = 'team' | 'customers';
 
 const TEAM_ROLES: { value: UserRole; label: string; color: string }[] = [
   { value: 'seo', label: 'SEO', color: 'bg-blue-100 text-blue-600' },
   { value: 'editor', label: 'Éditeur', color: 'bg-purple-100 text-purple-600' },
   { value: 'stock_manager', label: 'Gestionnaire Stock', color: 'bg-orange-100 text-orange-600' },
+  { value: 'commercial', label: 'Commercial', color: 'bg-emerald-100 text-emerald-700' },
   { value: 'admin', label: 'Administrateur', color: 'bg-red-100 text-red-600' },
 ];
 
@@ -21,14 +22,14 @@ const ALL_ROLES: { value: UserRole; label: string; color: string }[] = [
   ...TEAM_ROLES,
 ];
 
-const TEAM_ROLE_VALUES: UserRole[] = ['admin', 'editor', 'stock_manager', 'seo'];
+const TEAM_ROLE_VALUES: UserRole[] = ['admin', 'editor', 'stock_manager', 'seo', 'commercial'];
 
 const defaultForm = {
   email: '',
   first_name: '',
   last_name: '',
   password: '',
-  role: 'editor' as UserRole,
+  role: 'commercial' as UserRole,
 };
 
 export default function UsersManagement() {
