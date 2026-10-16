@@ -23,7 +23,7 @@ import logo from '@/assets/logo-porcivoir.png';
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const { signOut, profile } = useAuth();
+  const { signOut, profile, hasRole } = useAuth();
 
   const getRoleLabel = (role?: string) => {
     switch (role) {
@@ -54,8 +54,8 @@ const AdminLayout = () => {
     { name: 'Paramètres', href: '/admin/settings', icon: Settings, roles: ['admin'] },
   ];
 
-  const navigation = fullNavigation.filter(item => 
-    profile?.role && item.roles.includes(profile.role)
+  const navigation = fullNavigation.filter(item =>
+    item.roles.some((r) => hasRole(r as any))
   );
 
   const isActive = (path: string) => {

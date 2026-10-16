@@ -2,13 +2,17 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
 
-type UserRole = 'customer' | 'admin' | 'editor' | 'stock_manager' | 'seo';
+export type UserRole = 'customer' | 'admin' | 'editor' | 'stock_manager' | 'seo' | 'commercial';
 
-interface UserProfile {
+export interface UserProfile {
   id: string;
   first_name: string;
   last_name: string;
+  email?: string;
+  /** Primary role (legacy, kept for backward-compat) */
   role: UserRole;
+  /** Multi-role array — always populated, at minimum contains [role] */
+  roles: UserRole[];
 }
 
 interface AuthContextType {
@@ -16,6 +20,8 @@ interface AuthContextType {
   profile: UserProfile | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  /** Returns true if the current user has ANY of the provided roles */
+  hasRole: (...roles: UserRole[]) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -23,7 +29,17 @@ const AuthContext = createContext<AuthContextType>({
   profile: null,
   loading: true,
   signOut: async () => {},
+  hasRole: () => false,
 });
+
+/** Normalise a raw DB profile into a UserProfile with a guaranteed roles[] array */
+function normaliseProfile(data: any): UserProfile {
+  const primaryRole: UserRole = data.role ?? 'customer';
+  // roles column may not exist yet (pre-migration) — fall back gracefully
+  const rawRoles: UserRole[] = Array.isArray(data.roles) ? data.roles : [];
+  const roles = rawRoles.length > 0 ? rawRoles : [primaryRole];
+  return { ...data, role: primaryRole, roles };
+}
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -31,7 +47,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -41,7 +56,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -64,7 +78,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .single();
 
       if (error) throw error;
-      setProfile(data as UserProfile);
+      setProfile(normaliseProfile(data));
     } catch (error) {
       console.error('Error fetching user profile:', error);
     } finally {
@@ -76,8 +90,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     await supabase.auth.signOut();
   };
 
+  const hasRole = (...roles: UserRole[]) => {
+    if (!profile) return false;
+    return profile.roles.some((r) => roles.includes(r));
+  };
+
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signOut }}>
+    <AuthContext.Provider value={{ user, profile, loading, signOut, hasRole }}>
       {children}
     </AuthContext.Provider>
   );

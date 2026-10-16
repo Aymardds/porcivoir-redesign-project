@@ -1,12 +1,13 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import type { UserRole } from '@/context/AuthContext';
 
 interface ProtectedRouteProps {
-  allowedRoles?: Array<'customer' | 'admin' | 'editor' | 'stock_manager' | 'seo'>;
+  allowedRoles?: UserRole[];
 }
 
 const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, hasRole } = useAuth();
 
   if (loading) {
     return (
@@ -21,8 +22,8 @@ const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
     return <Navigate to="/login" replace />;
   }
 
-  // Not authorized (wrong role)
-  if (allowedRoles && profile && !allowedRoles.includes(profile.role)) {
+  // Not authorized — user must have at least one of the allowed roles
+  if (allowedRoles && profile && !hasRole(...allowedRoles)) {
     return <Navigate to="/" replace />;
   }
 

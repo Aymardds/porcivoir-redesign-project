@@ -1,24 +1,27 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
-import { Search, Shield, Filter, UserPlus, X, Loader2, Mail, User, Users, ShieldCheck } from 'lucide-react';
+import type { UserRole } from '@/context/AuthContext';
+import {
+  Search, Shield, Filter, UserPlus, X, Loader2, Mail, User,
+  Users, ShieldCheck, Check, ChevronDown,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
-type UserRole = 'customer' | 'admin' | 'editor' | 'stock_manager' | 'seo' | 'commercial';
 type TabId = 'team' | 'customers';
 
-const TEAM_ROLES: { value: UserRole; label: string; color: string }[] = [
-  { value: 'seo', label: 'SEO', color: 'bg-blue-100 text-blue-600' },
-  { value: 'editor', label: 'Éditeur', color: 'bg-purple-100 text-purple-600' },
-  { value: 'stock_manager', label: 'Gestionnaire Stock', color: 'bg-orange-100 text-orange-600' },
-  { value: 'commercial', label: 'Commercial', color: 'bg-emerald-100 text-emerald-700' },
-  { value: 'admin', label: 'Administrateur', color: 'bg-red-100 text-red-600' },
+const TEAM_ROLES: { value: UserRole; label: string; color: string; desc: string }[] = [
+  { value: 'seo',           label: 'SEO',                color: 'bg-blue-100 text-blue-700 border-blue-200',         desc: 'Accès au blog et optimisation' },
+  { value: 'editor',        label: 'Éditeur',            color: 'bg-purple-100 text-purple-700 border-purple-200',   desc: 'Création et édition de contenu' },
+  { value: 'stock_manager', label: 'Gestionnaire Stock', color: 'bg-orange-100 text-orange-700 border-orange-200',   desc: 'Inventaire, commandes, catégories' },
+  { value: 'commercial',    label: 'Commercial',         color: 'bg-emerald-100 text-emerald-700 border-emerald-200',desc: 'Clients, commandes, devis, promos' },
+  { value: 'admin',         label: 'Administrateur',     color: 'bg-red-100 text-red-700 border-red-200',            desc: 'Accès complet à toutes les sections' },
 ];
 
-const ALL_ROLES: { value: UserRole; label: string; color: string }[] = [
-  { value: 'customer', label: 'Client', color: 'bg-gray-100 text-gray-600' },
+const ALL_ROLES = [
+  { value: 'customer' as UserRole, label: 'Client', color: 'bg-gray-100 text-gray-600 border-gray-200', desc: '' },
   ...TEAM_ROLES,
 ];
 
@@ -29,9 +32,144 @@ const defaultForm = {
   first_name: '',
   last_name: '',
   password: '',
-  role: 'commercial' as UserRole,
+  roles: ['commercial'] as UserRole[],
 };
 
+const getRoleMeta = (role: string) =>
+  ALL_ROLES.find((r) => r.value === role) ?? { label: role, color: 'bg-gray-100 text-gray-600 border-gray-200', desc: '' };
+
+/* ─── Multi-role picker used in modals / table rows ─── */
+function RolePicker({
+  selected,
+  onChange,
+  disabled = false,
+  teamOnly = true,
+}: {
+  selected: UserRole[];
+  onChange: (roles: UserRole[]) => void;
+  disabled?: boolean;
+  teamOnly?: boolean;
+}) {
+  const options = teamOnly ? TEAM_ROLES : ALL_ROLES;
+
+  const toggle = (role: UserRole) => {
+    if (disabled) return;
+    const next = selected.includes(role)
+      ? selected.filter((r) => r !== role)
+      : [...selected, role];
+    // At least one role must remain
+    if (next.length === 0) return;
+    onChange(next);
+  };
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {options.map((r) => {
+        const active = selected.includes(r.value);
+        return (
+          <button
+            key={r.value}
+            type="button"
+            disabled={disabled}
+            onClick={() => toggle(r.value)}
+            title={r.desc}
+            className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border transition-all duration-150
+              ${active ? r.color : 'bg-transparent text-muted-foreground border-border hover:border-primary/40'}
+              ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+          >
+            {active && <Check className="w-3 h-3 shrink-0" />}
+            {r.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ─── Inline row role editor with save/cancel ─── */
+function InlineRoleEditor({
+  user,
+  currentUserId,
+  onSaved,
+}: {
+  user: any;
+  currentUserId?: string;
+  onSaved: () => void;
+}) {
+  const isSelf = user.id === currentUserId;
+  const initial: UserRole[] = Array.isArray(user.roles) && user.roles.length > 0
+    ? user.roles
+    : [user.role as UserRole];
+
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<UserRole[]>(initial);
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    if (saving || isSelf) return;
+    setSaving(true);
+    try {
+      const primary = draft.includes('admin') ? 'admin' : draft[0];
+      const { error } = await supabase
+        .from('profiles')
+        .update({ roles: draft, role: primary })
+        .eq('id', user.id);
+      if (error) throw error;
+      toast.success('Rôles mis à jour !');
+      setEditing(false);
+      onSaved();
+    } catch {
+      toast.error('Erreur lors de la mise à jour des rôles');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const cancel = () => {
+    setDraft(initial);
+    setEditing(false);
+  };
+
+  if (!editing) {
+    return (
+      <div className="flex items-center gap-2 flex-wrap">
+        {initial.map((r) => {
+          const meta = getRoleMeta(r);
+          return (
+            <span key={r} className={`text-xs font-bold px-2.5 py-1 rounded-full border ${meta.color}`}>
+              {meta.label}
+            </span>
+          );
+        })}
+        {!isSelf && (
+          <button
+            onClick={() => setEditing(true)}
+            className="text-xs text-muted-foreground hover:text-primary underline-offset-2 hover:underline flex items-center gap-1 ml-1"
+          >
+            <ChevronDown className="w-3 h-3" />
+            Modifier
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3 min-w-[280px]">
+      <RolePicker selected={draft} onChange={setDraft} disabled={isSelf} />
+      <div className="flex gap-2">
+        <Button size="sm" onClick={save} disabled={saving} className="h-7 text-xs px-3">
+          {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <><Check className="w-3 h-3 mr-1" />Sauvegarder</>}
+        </Button>
+        <Button size="sm" variant="outline" onClick={cancel} disabled={saving} className="h-7 text-xs px-3">
+          Annuler
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Main component ─── */
 export default function UsersManagement() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,68 +181,49 @@ export default function UsersManagement() {
   const [submitting, setSubmitting] = useState(false);
   const { profile: currentProfile } = useAuth();
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  // Reset filters when switching tabs
-  useEffect(() => {
-    setSearchTerm('');
-    setRoleFilter('all');
-  }, [activeTab]);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
-
       if (error) throw error;
       setUsers(data || []);
-    } catch (err: any) {
+    } catch {
       toast.error('Erreur lors du chargement des utilisateurs');
-      console.error(err);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const updateUserRole = async (userId: string, newRole: UserRole) => {
-    if (userId === currentProfile?.id) {
-      toast.error("Vous ne pouvez pas modifier votre propre rôle.");
-      return;
-    }
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ role: newRole })
-        .eq('id', userId);
+  useEffect(() => { fetchUsers(); }, [fetchUsers]);
+  useEffect(() => { setSearchTerm(''); setRoleFilter('all'); }, [activeTab]);
 
-      if (error) throw error;
-      toast.success('Rôle mis à jour avec succès');
-      fetchUsers();
-    } catch (err: any) {
-      toast.error('Erreur lors de la mise à jour du rôle');
-    }
-  };
+  const getUserRoles = (user: any): UserRole[] =>
+    Array.isArray(user.roles) && user.roles.length > 0 ? user.roles : [user.role as UserRole];
 
-  const getRoleBadge = (role: string) => {
-    const found = ALL_ROLES.find(r => r.value === role);
-    return found ?? { label: role, color: 'bg-gray-100 text-gray-600' };
-  };
+  const isTeamUser = (user: any) => getUserRoles(user).some((r) => TEAM_ROLE_VALUES.includes(r));
 
-  const getInitials = (user: any) => {
-    const f = user.first_name?.charAt(0) ?? '';
-    const l = user.last_name?.charAt(0) ?? '';
-    return (f + l).toUpperCase() || '?';
-  };
+  const teamUsers = users.filter(isTeamUser);
+  const customerUsers = users.filter((u) => !isTeamUser(u));
+  const sourceUsers = activeTab === 'team' ? teamUsers : customerUsers;
 
-  const getDisplayName = (user: any) => {
-    const name = [user.first_name, user.last_name].filter(Boolean).join(' ');
-    return name || user.email || 'Utilisateur inconnu';
-  };
+  const filteredUsers = sourceUsers.filter((user) => {
+    const s = searchTerm.toLowerCase();
+    const matchSearch =
+      (user.first_name?.toLowerCase() ?? '').includes(s) ||
+      (user.last_name?.toLowerCase() ?? '').includes(s) ||
+      (user.email?.toLowerCase() ?? '').includes(s);
+    const matchRole = roleFilter === 'all' || getUserRoles(user).includes(roleFilter);
+    return matchSearch && matchRole;
+  });
+
+  const getInitials = (u: any) =>
+    ((u.first_name?.charAt(0) ?? '') + (u.last_name?.charAt(0) ?? '')).toUpperCase() || '?';
+
+  const getDisplayName = (u: any) =>
+    [u.first_name, u.last_name].filter(Boolean).join(' ') || u.email || 'Utilisateur inconnu';
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,32 +231,30 @@ export default function UsersManagement() {
       toast.error('Veuillez remplir tous les champs obligatoires.');
       return;
     }
+    if (form.roles.length === 0) {
+      toast.error('Sélectionnez au moins un rôle.');
+      return;
+    }
     setSubmitting(true);
     try {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
-        options: {
-          data: {
-            first_name: form.first_name,
-            last_name: form.last_name,
-          },
-        },
+        options: { data: { first_name: form.first_name, last_name: form.last_name } },
       });
-
       if (authError) throw authError;
       if (!authData.user) throw new Error('Création du compte échouée.');
 
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: authData.user.id,
-          first_name: form.first_name,
-          last_name: form.last_name,
-          email: form.email,
-          role: form.role,
-        });
+      const primaryRole = form.roles.includes('admin') ? 'admin' : form.roles[0];
 
+      const { error: profileError } = await supabase.from('profiles').upsert({
+        id: authData.user.id,
+        first_name: form.first_name,
+        last_name: form.last_name,
+        email: form.email,
+        role: primaryRole,
+        roles: form.roles,
+      });
       if (profileError) throw profileError;
 
       toast.success(`Membre ${form.first_name} ajouté à l'équipe !`);
@@ -151,33 +268,13 @@ export default function UsersManagement() {
     }
   };
 
-  // Split users by type
-  const teamUsers = users.filter(u => TEAM_ROLE_VALUES.includes(u.role));
-  const customerUsers = users.filter(u => u.role === 'customer' || !TEAM_ROLE_VALUES.includes(u.role));
-
-  const sourceUsers = activeTab === 'team' ? teamUsers : customerUsers;
-  const availableRoleFilters = activeTab === 'team' ? TEAM_ROLES : [{ value: 'customer' as UserRole, label: 'Client', color: 'bg-gray-100 text-gray-600' }];
-
-  const filteredUsers = sourceUsers.filter((user) => {
-    const search = searchTerm.toLowerCase();
-    const matchesSearch =
-      (user.first_name?.toLowerCase() ?? '').includes(search) ||
-      (user.last_name?.toLowerCase() ?? '').includes(search) ||
-      (user.email?.toLowerCase() ?? '').includes(search) ||
-      (user.role?.toLowerCase() ?? '').includes(search);
-    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-    return matchesSearch && matchesRole;
-  });
-
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold font-sans text-foreground">Gestion des Utilisateurs</h1>
-          <p className="text-muted-foreground mt-1">
-            Gérez les comptes et les rôles de votre équipe.
-          </p>
+          <p className="text-muted-foreground mt-1">Gérez les comptes et les rôles de votre équipe.</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 px-3 py-2 bg-primary/10 rounded-lg text-primary text-sm font-medium">
@@ -195,47 +292,37 @@ export default function UsersManagement() {
 
       {/* Tabs */}
       <div className="flex gap-1 p-1 bg-secondary/50 rounded-xl w-fit border border-border">
-        <button
-          onClick={() => setActiveTab('team')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 ${
-            activeTab === 'team'
-              ? 'bg-card text-foreground shadow-sm border border-border'
-              : 'text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          <ShieldCheck className="w-4 h-4" />
-          Équipe opérationnelle
-          <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
-            activeTab === 'team' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
-          }`}>
-            {teamUsers.length}
-          </span>
-        </button>
-        <button
-          onClick={() => setActiveTab('customers')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 ${
-            activeTab === 'customers'
-              ? 'bg-card text-foreground shadow-sm border border-border'
-              : 'text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          <Users className="w-4 h-4" />
-          Clients
-          <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
-            activeTab === 'customers' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
-          }`}>
-            {customerUsers.length}
-          </span>
-        </button>
+        {[
+          { id: 'team' as TabId, icon: ShieldCheck, label: 'Équipe opérationnelle', count: teamUsers.length },
+          { id: 'customers' as TabId, icon: Users, label: 'Clients', count: customerUsers.length },
+        ].map(({ id, icon: Icon, label, count }) => (
+          <button
+            key={id}
+            onClick={() => setActiveTab(id)}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 ${
+              activeTab === id
+                ? 'bg-card text-foreground shadow-sm border border-border'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Icon className="w-4 h-4" />
+            {label}
+            <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
+              activeTab === id ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+            }`}>{count}</span>
+          </button>
+        ))}
       </div>
 
-      {/* Roles legend — team only */}
+      {/* Roles legend */}
       {activeTab === 'team' && (
         <div className="bg-card border border-border rounded-xl p-4">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Rôles disponibles</p>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+            Rôles disponibles — un utilisateur peut en avoir plusieurs
+          </p>
           <div className="flex flex-wrap gap-2">
             {TEAM_ROLES.map((role) => (
-              <span key={role.value} className={`text-xs font-semibold px-2.5 py-1 rounded-full ${role.color}`}>
+              <span key={role.value} title={role.desc} className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${role.color}`}>
                 {role.label}
               </span>
             ))}
@@ -265,7 +352,7 @@ export default function UsersManagement() {
                   className="pl-9 pr-4 py-2 text-sm font-medium border border-border rounded-md bg-secondary/50 text-foreground cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/30 appearance-none"
                 >
                   <option value="all">Tous les rôles</option>
-                  {availableRoleFilters.map((r) => (
+                  {TEAM_ROLES.map((r) => (
                     <option key={r.value} value={r.value}>{r.label}</option>
                   ))}
                 </select>
@@ -281,43 +368,33 @@ export default function UsersManagement() {
           <table className="w-full text-sm text-left">
             <thead className="bg-secondary/50 text-muted-foreground font-sans uppercase text-xs">
               <tr>
-                <th className="px-6 py-4 font-medium">
-                  {activeTab === 'team' ? 'Membre' : 'Client'}
-                </th>
+                <th className="px-6 py-4 font-medium">{activeTab === 'team' ? 'Membre' : 'Client'}</th>
                 <th className="px-6 py-4 font-medium">Email</th>
-                <th className="px-6 py-4 font-medium">Rôle</th>
+                <th className="px-6 py-4 font-medium">Rôles</th>
                 <th className="px-6 py-4 font-medium">Inscription</th>
-                {activeTab === 'team' && (
-                  <th className="px-6 py-4 font-medium text-right">Changer le rôle</th>
-                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {loading ? (
                 <tr>
-                  <td colSpan={activeTab === 'team' ? 5 : 4} className="px-6 py-10 text-center text-muted-foreground">
+                  <td colSpan={4} className="px-6 py-10 text-center text-muted-foreground">
                     <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2" />
                     Chargement...
                   </td>
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={activeTab === 'team' ? 5 : 4} className="px-6 py-10 text-center">
+                  <td colSpan={4} className="px-6 py-10 text-center">
                     <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                      {activeTab === 'team' ? (
-                        <ShieldCheck className="w-8 h-8 opacity-30" />
-                      ) : (
-                        <Users className="w-8 h-8 opacity-30" />
-                      )}
+                      {activeTab === 'team' ? <ShieldCheck className="w-8 h-8 opacity-30" /> : <Users className="w-8 h-8 opacity-30" />}
                       <p className="text-sm">
                         {activeTab === 'team'
-                          ? "Aucun membre d'équipe trouvé. Ajoutez votre premier collaborateur."
+                          ? "Aucun membre d'équipe trouvé."
                           : 'Aucun client trouvé.'}
                       </p>
                       {activeTab === 'team' && (
                         <Button size="sm" variant="outline" onClick={() => setShowModal(true)} className="mt-1">
-                          <UserPlus className="w-3.5 h-3.5 mr-2" />
-                          Ajouter un membre
+                          <UserPlus className="w-3.5 h-3.5 mr-2" />Ajouter un membre
                         </Button>
                       )}
                     </div>
@@ -325,7 +402,6 @@ export default function UsersManagement() {
                 </tr>
               ) : (
                 filteredUsers.map((user) => {
-                  const roleBadge = getRoleBadge(user.role);
                   const isSelf = user.id === currentProfile?.id;
                   return (
                     <tr key={user.id} className={`hover:bg-secondary/20 transition-colors ${isSelf ? 'opacity-70' : ''}`}>
@@ -352,27 +428,21 @@ export default function UsersManagement() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${roleBadge.color}`}>
-                          {roleBadge.label}
-                        </span>
+                        {activeTab === 'team' ? (
+                          <InlineRoleEditor
+                            user={user}
+                            currentUserId={currentProfile?.id}
+                            onSaved={fetchUsers}
+                          />
+                        ) : (
+                          <span className="text-xs font-bold px-2.5 py-1 rounded-full border bg-gray-100 text-gray-600 border-gray-200">
+                            Client
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-muted-foreground">
                         {new Date(user.created_at).toLocaleDateString('fr-FR')}
                       </td>
-                      {activeTab === 'team' && (
-                        <td className="px-6 py-4 text-right">
-                          <select
-                            value={user.role}
-                            onChange={(e) => updateUserRole(user.id, e.target.value as UserRole)}
-                            disabled={isSelf}
-                            className="text-xs font-medium border border-border rounded-md px-2 py-1.5 bg-background text-foreground cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary/30"
-                          >
-                            {TEAM_ROLES.map((r) => (
-                              <option key={r.value} value={r.value}>{r.label}</option>
-                            ))}
-                          </select>
-                        </td>
-                      )}
                     </tr>
                   );
                 })
@@ -468,28 +538,21 @@ export default function UsersManagement() {
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Rôle</label>
-                <select
-                  value={form.role}
-                  onChange={(e) => setForm({ ...form, role: e.target.value as UserRole })}
-                  className="w-full px-3 py-2 text-sm font-medium border border-border rounded-md bg-secondary/50 text-foreground cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/30"
-                >
-                  {TEAM_ROLES.map((r) => (
-                    <option key={r.value} value={r.value}>{r.label}</option>
-                  ))}
-                </select>
-                <p className="text-xs text-muted-foreground">Peut être modifié ultérieurement dans cette page.</p>
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Rôles <span className="text-red-500">*</span>
+                  <span className="ml-2 font-normal text-muted-foreground normal-case">
+                    ({form.roles.length} sélectionné{form.roles.length > 1 ? 's' : ''})
+                  </span>
+                </label>
+                <RolePicker selected={form.roles} onChange={(roles) => setForm({ ...form, roles })} />
+                <p className="text-xs text-muted-foreground">
+                  Cliquez pour activer / désactiver un rôle. Plusieurs rôles peuvent être combinés.
+                </p>
               </div>
 
               <div className="flex gap-3 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => setShowModal(false)}
-                  disabled={submitting}
-                >
+                <Button type="button" variant="outline" className="flex-1" onClick={() => setShowModal(false)} disabled={submitting}>
                   Annuler
                 </Button>
                 <Button type="submit" className="flex-1" disabled={submitting}>
