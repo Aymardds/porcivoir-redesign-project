@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
 import { ShoppingCart, ArrowRight } from "lucide-react";
+import compositionImage from "@/assets/composition.jpeg";
 
 const commitments = [
   {
     id: "alimentation",
-    image: "https://porcivoir.com/assets/images/postee-1168x765.png",
+    image: compositionImage,
     eyebrow: "Alimentation Naturelle",
     title: "Nourris à base de céréales et protéines végétales",
     description:
@@ -39,6 +40,9 @@ export default function Commitments() {
                     <img
                       src={item.image}
                       alt={item.title}
+                      width={800}
+                      height={600}
+                      decoding="async"
                       className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
                       loading="lazy"
                     />

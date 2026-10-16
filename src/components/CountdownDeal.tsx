@@ -130,6 +130,10 @@ const CountdownDeal = () => {
                 <img
                   src={product.image_url}
                   alt={product.title}
+                  width={500}
+                  height={400}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 />
               </div>
@@ -193,6 +197,7 @@ const CountdownDeal = () => {
                 addItem(product);
                 toast.success(`${product.title} ajouté au panier !`);
               }}
+              aria-label={`Ajouter ${product.title} au panier et profiter de l'offre`}
               className="mt-6 inline-flex items-center gap-2 bg-accent text-accent-foreground font-semibold px-8 py-3.5 rounded-lg text-sm hover:bg-accent/90 transition-colors shadow-lg shadow-accent/20 uppercase tracking-widest"
             >
               <ShoppingCart className="w-4 h-4" />

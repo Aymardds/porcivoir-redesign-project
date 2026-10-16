@@ -21,7 +21,10 @@ Disallow: /login
 Disallow: /register
 Disallow: /forgot-password
 Disallow: /reset-password
+Disallow: /mes-devis/
+Disallow: /devis/generateur/
 
 # Host and Sitemap
+Host: https://www.porcivoir.com
 Sitemap: https://www.porcivoir.com/sitemap.xml
 

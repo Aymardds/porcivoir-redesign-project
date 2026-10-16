@@ -104,6 +104,10 @@ const ProductGrid = ({ limit, initialCategory = "Tout" }: { limit?: number; init
                   <img
                     src={product.image_url}
                     alt={product.title}
+                    width={400}
+                    height={500}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
                 ) : (
@@ -122,6 +126,7 @@ const ProductGrid = ({ limit, initialCategory = "Tout" }: { limit?: number; init
                 <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 duration-300 backdrop-blur-[2px]">
                   <button
                     onClick={(e) => { e.preventDefault(); toast.info("Bientôt disponible"); }}
+                    aria-label="Aperçu rapide"
                     className="w-10 h-10 rounded-full bg-white text-primary flex items-center justify-center shadow-xl hover:bg-primary hover:text-white transition-all transform hover:scale-110"
                   >
                     <Eye className="w-4 h-4" />
@@ -170,6 +175,7 @@ const ProductGrid = ({ limit, initialCategory = "Tout" }: { limit?: number; init
                     category: product.categories?.name || 'Général',
                     description: product.description || ''
                   })}
+                  aria-label={`Ajouter ${product.title} au panier`}
                   className="mt-4 w-full flex items-center justify-center gap-2 bg-foreground text-card py-3 rounded-xl text-xs font-black uppercase tracking-tighter hover:bg-primary hover:text-white transition-all duration-300 shadow-sm active:scale-95"
                 >
                   <ShoppingCart className="w-4 h-4" />

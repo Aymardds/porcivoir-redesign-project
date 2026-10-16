@@ -14,7 +14,7 @@ export const DEFAULT_SEO = {
   title: "Porc'Ivoire — Viande de Porc Fraîche & Élevage en Côte d'Ivoire",
   description:
     "Commandez votre viande de porc fraîche en ligne en Côte d'Ivoire. Découpes de porc de qualité supérieure, porcs sur pied, conseils d'élevage et livraison rapide à Abidjan et environs.",
-  image: "https://www.porcivoir.com/og-image.png",
+  image: "https://www.porcivoir.com/og-image.jpg",
   url: "https://www.porcivoir.com/",
   keywords:
     "porcivoire, viande de porc abidjan, boucherie porcine cote d'ivoire, porc frais abidjan, elevage porcin abidjan, porcelet cote d'ivoire, cote de porc, poitrine de porc, livraison viande abidjan",
@@ -66,16 +66,22 @@ export default function SEO({
     canonicalLink.setAttribute("href", currentUrl);
 
     // Open Graph
+    setMeta("og:site_name", "Porc'Ivoire", true);
     setMeta("og:title", fullTitle, true);
     setMeta("og:description", description, true);
     setMeta("og:image", image, true);
+    setMeta("og:image:secure_url", image, true);
+    setMeta("og:image:alt", fullTitle, true);
     setMeta("og:url", currentUrl, true);
     setMeta("og:type", type, true);
 
     // Twitter Card
+    setMeta("twitter:card", "summary_large_image");
+    setMeta("twitter:site", "@PorcIvoire");
     setMeta("twitter:title", fullTitle);
     setMeta("twitter:description", description);
     setMeta("twitter:image", image);
+    setMeta("twitter:image:alt", fullTitle);
 
     // JSON-LD injection
     const scriptId = "dynamic-seo-jsonld";

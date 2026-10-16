@@ -50,6 +50,23 @@ export default function ContactPage() {
                 title="Contactez Porc'Ivoire — Boucherie & Service Client Abidjan"
                 description="Une question sur nos produits de porc, une commande spéciale ou nos formations ? Contactez le service client Porc'Ivoire à Abidjan."
                 url="https://porcivoir.com/contact"
+                jsonLd={{
+                    "@context": "https://schema.org",
+                    "@type": "ContactPage",
+                    "name": "Contact Porc'Ivoire",
+                    "description": "Contactez la boucherie et le service client Porc'Ivoire à Abidjan",
+                    "mainEntity": {
+                        "@type": "LocalBusiness",
+                        "name": "Porc'Ivoire",
+                        "telephone": "+2250787295734",
+                        "email": "contact@porcivoir.com",
+                        "address": {
+                            "@type": "PostalAddress",
+                            "addressLocality": "Abidjan",
+                            "addressCountry": "CI"
+                        }
+                    }
+                }}
             />
             <Header />
 

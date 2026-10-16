@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import porc1Image from "@/assets/Porc1.jpeg";
 
 const items = [
   {
@@ -114,8 +115,11 @@ export default function BrandStory() {
             {/* Main image from old site */}
             <div className="relative rounded-3xl overflow-hidden shadow-2xl">
               <img
-                src="https://porcivoir.com/assets/images/bgporcivoire1-copie-992x707.png"
+                src={porc1Image}
                 alt="Élevage Porc'Ivoire - Savoir-faire ivoirien"
+                width={600}
+                height={460}
+                decoding="async"
                 className="w-full h-[460px] object-cover"
                 loading="lazy"
               />

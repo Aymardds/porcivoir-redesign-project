@@ -61,6 +61,18 @@ export default function DevisPage() {
                 title="Demande de Devis & Estimation Élevage Porcin Sur Mesure"
                 description="Obtenez votre devis agro-pastoral personnalisé en 48h : aménagement de porcherie, équipements, approvisionnement et études de faisabilité par Porc'Ivoire."
                 url="https://porcivoir.com/devis"
+                jsonLd={{
+                    "@context": "https://schema.org",
+                    "@type": "FAQPage",
+                    "mainEntity": faqs.map(f => ({
+                        "@type": "Question",
+                        "name": f.q,
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": f.a
+                        }
+                    }))
+                }}
             />
             <Header />
 

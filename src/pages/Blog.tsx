@@ -81,6 +81,10 @@ export default function Blog() {
                       <img 
                         src={blog.cover_image} 
                         alt={blog.title} 
+                        width={600}
+                        height={350}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     ) : (

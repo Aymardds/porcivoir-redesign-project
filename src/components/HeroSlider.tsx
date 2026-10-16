@@ -72,7 +72,12 @@ const HeroSlider = () => {
           >
             <img
               src={slide.image}
-              alt={slide.title}
+              alt={slide.title.replace("\n", " ")}
+              width={1920}
+              height={600}
+              loading={i === 0 ? "eager" : "lazy"}
+              fetchPriority={i === 0 ? "high" : "low"}
+              decoding={i === 0 ? "sync" : "async"}
               className={`absolute inset-0 w-full h-full object-cover ${
                 i === current ? "hero-slide-enter" : ""
               }`}
@@ -94,7 +99,7 @@ const HeroSlider = () => {
                 </span>
 
                 {/* Title */}
-                <h1 className="text-3xl md:text-5xl lg:text-6xl text-white leading-tight whitespace-pre-line mb-4">
+                <h1 className="text-3xl md:text-5xl lg:text-6xl text-white leading-tight whitespace-pre-line mb-4 font-serif">
                   {slide.title}
                 </h1>
 
@@ -120,23 +125,28 @@ const HeroSlider = () => {
       {/* Navigation Arrows */}
       <button
         onClick={prev}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/25 transition-colors"
+        aria-label="Diapositive précédente"
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/25 transition-colors focus:outline-none focus:ring-2 focus:ring-accent"
       >
         <ChevronLeft className="w-5 h-5" />
       </button>
       <button
         onClick={next}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/25 transition-colors"
+        aria-label="Diapositive suivante"
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/25 transition-colors focus:outline-none focus:ring-2 focus:ring-accent"
       >
         <ChevronRight className="w-5 h-5" />
       </button>
 
       {/* Dots */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2" role="tablist" aria-label="Sélection de la diapositive">
         {slides.map((_, i) => (
           <button
             key={i}
             onClick={() => goTo(i)}
+            aria-label={`Aller à la diapositive ${i + 1}`}
+            aria-selected={i === current}
+            role="tab"
             className={`h-2 rounded-full transition-all duration-300 ${
               i === current
                 ? "w-8 bg-accent"

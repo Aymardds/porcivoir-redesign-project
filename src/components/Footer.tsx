@@ -34,26 +34,43 @@ const Footer = () => (
       <div className="container py-12 md:py-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
         {/* Brand */}
         <div>
-          <img src={logo} alt="Porcivoir" className="h-16 md:h-20 w-auto mb-4 object-contain" />
+          <img
+            src={logo}
+            alt="Logo Porc'Ivoire"
+            width={200}
+            height={80}
+            loading="lazy"
+            decoding="async"
+            className="h-16 md:h-20 w-auto mb-4 object-contain"
+          />
           <p className="text-primary-foreground/50 text-sm leading-relaxed font-sans">
             Votre boucherie de porc de confiance en Côte d'Ivoire. Viande
             fraîche et de qualité, directement de nos fermes.
           </p>
           <div className="flex items-center gap-3 mt-5">
             <a
-              href="#"
+              href="https://facebook.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Page Facebook Porc'Ivoire"
               className="w-9 h-9 rounded-full bg-primary-foreground/10 flex items-center justify-center hover:bg-accent hover:text-white transition-colors"
             >
               <Facebook className="w-4 h-4" />
             </a>
             <a
-              href="#"
+              href="https://instagram.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Compte Instagram Porc'Ivoire"
               className="w-9 h-9 rounded-full bg-primary-foreground/10 flex items-center justify-center hover:bg-accent hover:text-white transition-colors"
             >
               <Instagram className="w-4 h-4" />
             </a>
             <a
-              href="#"
+              href="https://wa.me/2250787295734"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Discussion WhatsApp Porc'Ivoire"
               className="w-9 h-9 rounded-full bg-primary-foreground/10 flex items-center justify-center hover:bg-accent hover:text-white transition-colors"
             >
               <MessageCircle className="w-4 h-4" />

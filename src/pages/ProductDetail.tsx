@@ -84,7 +84,7 @@ const ProductDetail = () => {
     "@context": "https://schema.org",
     "@type": "Product",
     "name": product.title,
-    "image": product.image_url ? [product.image_url] : ["https://porcivoir.com/og-image.png"],
+    "image": product.image_url ? [product.image_url] : ["https://porcivoir.com/og-image.jpg"],
     "description": productDescription,
     "sku": product.id,
     "category": product.categories?.name || "Viande de porc",
@@ -108,7 +108,7 @@ const ProductDetail = () => {
       <SEO
         title={`${product.title} - Découpe de Porc Frais`}
         description={productDescription}
-        image={product.image_url || "https://porcivoir.com/og-image.png"}
+        image={product.image_url || "https://porcivoir.com/og-image.jpg"}
         url={`https://porcivoir.com/produit/${product.slug}`}
         type="product"
         jsonLd={productJsonLd}
@@ -136,6 +136,10 @@ const ProductDetail = () => {
                   <img
                     src={product.image_url}
                     alt={product.title}
+                    width={800}
+                    height={800}
+                    fetchPriority="high"
+                    decoding="sync"
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                 ) : (
@@ -260,7 +264,15 @@ const ProductDetail = () => {
                 <Link key={p.id} to={`/produit/${p.slug}`} className="group flex flex-col">
                   <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-secondary/20 border border-border/30 shadow-sm transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-2">
                     {p.image_url ? (
-                      <img src={p.image_url} alt={p.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                      <img
+                        src={p.image_url}
+                        alt={p.title}
+                        width={300}
+                        height={400}
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center opacity-10">
                          <Package className="w-8 h-8" />

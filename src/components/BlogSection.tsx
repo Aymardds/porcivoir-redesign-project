@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { ArrowRight, Calendar } from "lucide-react";
 import heroSlide1 from "@/assets/hero-slide-1.png";
 import heroSlide2 from "@/assets/hero-slide-2.png";
@@ -10,7 +11,7 @@ const posts = [
     title: "Les Meilleures Recettes de Porc pour vos Fêtes",
     excerpt:
       "Découvrez nos idées de recettes festives à base de porc pour impressionner vos convives lors de vos célébrations.",
-    link: "#",
+    link: "/blog",
   },
   {
     image: heroSlide2,
@@ -18,7 +19,7 @@ const posts = [
     title: "Comment Choisir la Bonne Découpe de Porc",
     excerpt:
       "Guide complet pour comprendre les différentes découpes de porc et choisir celle qui convient à votre plat.",
-    link: "#",
+    link: "/blog",
   },
   {
     image: heroSlide3,
@@ -26,7 +27,7 @@ const posts = [
     title: "L'Art de la Charcuterie Artisanale en Côte d'Ivoire",
     excerpt:
       "De la ferme à votre assiette : les secrets de fabrication de notre charcuterie premium 100% ivoirienne.",
-    link: "#",
+    link: "/blog",
   },
 ];
 
@@ -39,26 +40,31 @@ const BlogSection = () => (
           Conseils, recettes et actualités de Porc'Ivoire
         </p>
       </div>
-      <a
-        href="#"
+      <Link
+        to="/blog"
         className="text-accent font-semibold text-sm font-sans inline-flex items-center gap-1 hover:gap-2 transition-all"
       >
         Voir tous les articles
         <ArrowRight className="w-4 h-4" />
-      </a>
+      </Link>
     </div>
 
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {posts.map((post, i) => (
-        <a
+        <Link
           key={i}
-          href={post.link}
+          to={post.link}
+          aria-label={`Lire l'article : ${post.title}`}
           className="group bg-card rounded-2xl overflow-hidden border border-border/50 hover:shadow-xl transition-all duration-300"
         >
           <div className="relative h-48 overflow-hidden">
             <img
               src={post.image}
               alt={post.title}
+              width={600}
+              height={350}
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
@@ -79,7 +85,7 @@ const BlogSection = () => (
               <ArrowRight className="w-3.5 h-3.5" />
             </span>
           </div>
-        </a>
+        </Link>
       ))}
     </div>
   </section>

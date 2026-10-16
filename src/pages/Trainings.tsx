@@ -71,6 +71,17 @@ export default function Trainings() {
                 title="Formations en Élevage Porcin Moderne en Côte d'Ivoire"
                 description="Développez vos compétences agricoles avec nos formations pratiques en conduite d'élevage porcin, alimentation, biosécurité et rentabilité animées par des experts reconnus."
                 url="https://porcivoir.com/formations"
+                jsonLd={{
+                    "@context": "https://schema.org",
+                    "@type": "Course",
+                    "name": "Formation Conduite d'Élevage Porcin Moderne",
+                    "description": "Formation professionnelle pratique en conduite d'élevage porcin, biosécurité, alimentation et rentabilité d'exploitation.",
+                    "provider": {
+                        "@type": "Organization",
+                        "name": "Porc'Ivoire",
+                        "sameAs": "https://porcivoir.com"
+                    }
+                }}
             />
             <Header />
 

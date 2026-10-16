@@ -277,7 +277,15 @@ export default function Shop() {
                   <div key={product.id} className="group bg-white rounded-2xl overflow-hidden border border-border/50 hover:border-primary/30 shadow-sm hover:shadow-xl transition-all duration-500 flex flex-col">
                     <Link to={`/produit/${product.slug}`} className="block relative aspect-[4/3] overflow-hidden bg-secondary/30">
                       {product.image_url ? (
-                        <img src={product.image_url} alt={product.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                        <img
+                          src={product.image_url}
+                          alt={product.title}
+                          width={400}
+                          height={300}
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        />
                       ) : (
                         <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground p-4 bg-gradient-to-br from-secondary to-secondary/50">
                           <Package className="w-8 h-8 mb-2 opacity-20" />
@@ -331,6 +339,7 @@ export default function Shop() {
                             description: product.description || "",
                           })
                         }
+                        aria-label={`Ajouter ${product.title} au panier`}
                         className="mt-4 w-full flex items-center justify-center gap-2 bg-foreground text-card py-3 rounded-xl text-xs font-black uppercase tracking-tighter hover:bg-primary hover:text-white transition-all duration-300 shadow-sm active:scale-95"
                       >
                         <ShoppingCart className="w-4 h-4" />

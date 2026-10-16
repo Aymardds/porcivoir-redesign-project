@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import heroSlide1 from "@/assets/hero-slide-1.png";
 import heroSlide2 from "@/assets/hero-slide-2.png";
@@ -48,14 +49,19 @@ const PromoBanners = () => {
             : "Promo";
 
           return (
-            <a
+            <Link
               key={promo.id}
-              href="/boutique"
+              to="/boutique"
+              aria-label={`Voir la promotion ${promo.code}`}
               className="promo-shine group relative rounded-2xl overflow-hidden h-52 md:h-56 block"
             >
               <img
                 src={fallbackImages[i % fallbackImages.length]}
                 alt={promo.code}
+                width={500}
+                height={250}
+                loading="lazy"
+                decoding="async"
                 className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
               />
               <div
@@ -72,7 +78,7 @@ const PromoBanners = () => {
                   {promo.description || "Offre spéciale temporaire !"}
                 </p>
               </div>
-            </a>
+            </Link>
           );
         })}
       </div>

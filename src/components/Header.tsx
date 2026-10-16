@@ -56,22 +56,31 @@ const Header = () => {
           </button>
 
           {/* Logo */}
-          <Link to="/" className="flex-shrink-0">
-            <img src={logo} alt="Porcivoir" className="h-12 md:h-20 w-auto object-contain" />
+          <Link to="/" className="flex-shrink-0" aria-label="Retour à l'accueil Porc'Ivoire">
+            <img
+              src={logo}
+              alt="Logo Porc'Ivoire"
+              width={200}
+              height={80}
+              fetchPriority="high"
+              className="h-12 md:h-20 w-auto object-contain"
+            />
           </Link>
 
           {/* Search bar — desktop */}
           <div className="hidden md:flex flex-1 max-w-xl mx-4">
-            <form onSubmit={handleSearch} className="relative w-full">
+            <form onSubmit={handleSearch} className="relative w-full" role="search">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Rechercher un produit..."
+                aria-label="Rechercher un produit"
                 className="w-full bg-secondary/70 border border-border rounded-lg pl-4 pr-12 py-2.5 text-sm font-sans text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 transition-all"
               />
               <button
                 type="submit"
+                aria-label="Lancer la recherche"
                 className="absolute right-1 top-1/2 -translate-y-1/2 w-9 h-9 bg-accent text-accent-foreground rounded-md flex items-center justify-center hover:bg-accent/90 transition-colors"
               >
                 <Search className="w-4 h-4" />
@@ -107,7 +116,10 @@ const Header = () => {
             {/* Account — desktop */}
             {user ? (
               <div className="relative group hidden md:block">
-                <button className="p-2 flex items-center gap-2 hover:text-accent transition-colors">
+                <button
+                  aria-label="Menu du compte utilisateur"
+                  className="p-2 flex items-center gap-2 hover:text-accent transition-colors"
+                >
                   <User className="w-5 h-5" />
                   <span className="text-sm font-bold truncate max-w-[100px] hidden lg:inline">{profile?.first_name || 'Mon Compte'}</span>
                 </button>
@@ -130,14 +142,14 @@ const Header = () => {
                 </div>
               </div>
             ) : (
-              <Link to="/login" className="p-2 hover:text-accent transition-colors hidden md:flex items-center gap-2">
+              <Link to="/login" aria-label="Se connecter à votre compte" className="p-2 hover:text-accent transition-colors hidden md:flex items-center gap-2">
                 <User className="w-5 h-5" />
                 <span className="text-sm font-bold hidden lg:inline">Connexion</span>
               </Link>
             )}
 
             {/* Wishlist */}
-            <button className="p-2 hover:text-accent transition-colors relative">
+            <button aria-label="Liste de souhaits" className="p-2 hover:text-accent transition-colors relative">
               <Heart className="w-5 h-5" />
               <span className="absolute -top-0.5 -right-0.5 bg-accent text-accent-foreground text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
                 0

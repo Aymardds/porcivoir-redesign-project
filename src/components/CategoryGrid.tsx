@@ -1,4 +1,5 @@
 import { Beef, Flame, Drumstick, Utensils, Heart, Scissors } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const categories = [
   {
@@ -55,10 +56,11 @@ const CategoryGrid = () => (
     </div>
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
       {categories.map((cat) => (
-        <a
+        <Link
           key={cat.name}
-          href="#produits"
-          className="category-lift group flex flex-col items-center text-center p-6 rounded-2xl bg-card border border-border/50 hover:border-accent/30 cursor-pointer"
+          to={`/boutique?categorie=${encodeURIComponent(cat.name)}`}
+          aria-label={`Voir les produits de la catégorie ${cat.name}`}
+          className="category-lift group flex flex-col items-center text-center p-6 rounded-2xl bg-card border border-border/50 hover:border-accent/30 cursor-pointer transition-all"
         >
           <div
             className={`w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br ${cat.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}
@@ -71,7 +73,7 @@ const CategoryGrid = () => (
           <span className="text-xs text-muted-foreground mt-1 font-sans">
             {cat.count} produits
           </span>
-        </a>
+        </Link>
       ))}
     </div>
   </section>

@@ -78,7 +78,7 @@ export default function BlogPost() {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
     "headline": blog.title,
-    "image": blog.cover_image ? [blog.cover_image] : ["https://porcivoir.com/og-image.png"],
+    "image": blog.cover_image ? [blog.cover_image] : ["https://porcivoir.com/og-image.jpg"],
     "datePublished": blog.created_at,
     "dateModified": blog.created_at,
     "author": {
@@ -101,7 +101,7 @@ export default function BlogPost() {
       <SEO
         title={blog.title}
         description={blog.excerpt || `Lisez l'article complet "${blog.title}" sur le blog Porc'Ivoire.`}
-        image={blog.cover_image || "https://porcivoir.com/og-image.png"}
+        image={blog.cover_image || "https://porcivoir.com/og-image.jpg"}
         url={`https://porcivoir.com/blog/${blog.slug}`}
         type="article"
         jsonLd={blogJsonLd}
@@ -120,6 +120,10 @@ export default function BlogPost() {
                 <img 
                   src={blog.cover_image} 
                   alt={blog.title} 
+                  width={1200}
+                  height={600}
+                  fetchPriority="high"
+                  decoding="sync"
                   className="w-full h-full object-cover"
                 />
               </div>

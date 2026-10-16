@@ -65,7 +65,12 @@ const App = () => (
       <Sonner />
       <AuthProvider>
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Chargement...</div>}>
+          <Suspense fallback={
+            <div className="flex flex-col items-center justify-center min-h-screen bg-background">
+              <div className="w-12 h-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+              <span className="mt-4 text-xs font-black uppercase tracking-widest text-muted-foreground animate-pulse">Chargement Porc'Ivoire...</span>
+            </div>
+          }>
           <Routes>
             {/* Admin Secure Routes */}
             <Route element={<ProtectedRoute allowedRoles={['admin', 'editor', 'seo', 'stock_manager']} />}>

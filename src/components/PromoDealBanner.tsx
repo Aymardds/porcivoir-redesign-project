@@ -165,6 +165,7 @@ const PromoDealBanner = ({ compact = false }: PromoBannerProps) => {
 
               <Link
                 to="/boutique"
+                aria-label={`Voir les produits éligibles à la promotion ${promo.code}`}
                 className={`mt-auto flex items-center gap-2 text-xs font-black uppercase tracking-widest hover:gap-3 transition-all ${promo.is_featured ? "text-accent" : "text-primary"}`}
               >
                 Voir les produits
